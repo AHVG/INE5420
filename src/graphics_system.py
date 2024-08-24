@@ -1,6 +1,7 @@
 import tkinter as tk
 
-from display_file import DisplayFile, pan, zoom
+from  window import Window
+from display_file import DisplayFile
 from constants import INITIAL_VIEWPORT, INITIAL_WINDOW
 
 
@@ -12,7 +13,7 @@ class GraphicsSystem:
         self.viewport = INITIAL_VIEWPORT
         self.window = [-100, 100, -100, 100]
 
-        self.zoom = 1.0
+        self.window = Window()
         
         self.canvas = tk.Canvas(self.root, width=800, height=600)
         self.canvas.grid(column=1, rowspan=7, padx=10, pady=10)
@@ -41,29 +42,27 @@ class GraphicsSystem:
         self.display_file.draw()
     
     def zoom_out(self):
-        self.zoom += 0.01
-        zoom(self.window, self.zoom)
+        self.window.zoom_out()
         self.display_file.draw()
 
     def zoom_in(self):
-        self.zoom -= 0.01
-        zoom(self.window, self.zoom)
+        self.window.zoom_in()
         self.display_file.draw()
     
     def move_up(self):
-        pan(self.window, 0, 5)
+        self.window.move_up()
         self.display_file.draw()
 
     def move_down(self):
-        pan(self.window, 0, -5)
+        self.window.move_down()
         self.display_file.draw()
 
     def move_left(self):
-        pan(self.window, -5, 0)
+        self.window.move_left()
         self.display_file.draw()
 
     def move_right(self):
-        pan(self.window, 5, 0)
+        self.window.move_right()
         self.display_file.draw()
 
     def run(self):
