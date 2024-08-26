@@ -1,7 +1,10 @@
 import tkinter as tk
 
+from ast import literal_eval
+
 from  window import Window
 from display_file import DisplayFile
+from drawable import Point, Line, Wireframe
 from constants import VIEWPORT_WIDTH, VIEWPORT_HEIGHT, INITIAL_VIEWPORT, INITIAL_WINDOW
 
 
@@ -87,13 +90,93 @@ class GraphicsSystem:
         self.manipulation_frame = tk.LabelFrame(self.menu_frame, text="Manipulation", bg="lightgray", relief="groove", borderwidth=2, font=("Arial", 14,))
         self.manipulation_frame.pack(side=tk.TOP, padx=10, pady=10)
 
-        self.point_create_button = tk.Button(self.manipulation_frame, text="Create Point", command=lambda: None)
-        self.point_create_button.grid(row=0, column=0, padx=5, pady=5)
+        def open_point_dialog():
+            dialog = tk.Toplevel(self.canvas.winfo_toplevel())
+            dialog.title("Create Point")
 
-        self.line_create_button = tk.Button(self.manipulation_frame, text="Create Line", command=lambda: None)
+            tk.Label(dialog, text="Name:").grid(row=0, column=0)
+            name = tk.Entry(dialog)
+            name.grid(row=0, column=1)
+
+            tk.Label(dialog, text="x:").grid(row=1, column=0)
+            x_entry = tk.Entry(dialog)
+            x_entry.grid(row=1, column=1)
+
+            tk.Label(dialog, text="y:").grid(row=2, column=0)
+            y_entry = tk.Entry(dialog)
+            y_entry.grid(row=2, column=1)
+
+            def create_point_from_dialog(name, x, y, dialog):
+                self.display_file.add_object(Point(name, [(float(x), float(y))]))
+                self.update_objects_list()
+                self.display_file.draw()
+                dialog.destroy()
+
+            create_button = tk.Button(dialog, text="Create", command=lambda: create_point_from_dialog(name.get(), x_entry.get(), y_entry.get(), dialog))
+            create_button.grid(row=3, column=0, columnspan=2, pady=5)
+
+        self.point_create_button = tk.Button(self.manipulation_frame, text="Create Point", command=lambda: open_point_dialog())
+        self.point_create_button.grid(row=0, column=0, padx=5, pady=5)
+    
+        def open_line_dialog():
+            dialog = tk.Toplevel(self.canvas.winfo_toplevel())
+            dialog.title("Create Line")
+
+            tk.Label(dialog, text="Name:").grid(row=0, column=0)
+            name = tk.Entry(dialog)
+            name.grid(row=0, column=1)
+
+            tk.Label(dialog, text="x1:").grid(row=1, column=0)
+            x1_entry = tk.Entry(dialog)
+            x1_entry.grid(row=1, column=1)
+
+            tk.Label(dialog, text="y1:").grid(row=1, column=2)
+            y1_entry = tk.Entry(dialog)
+            y1_entry.grid(row=1, column=3)
+
+            tk.Label(dialog, text="x2:").grid(row=2, column=0)
+            x2_entry = tk.Entry(dialog)
+            x2_entry.grid(row=2, column=1)
+
+            tk.Label(dialog, text="y2:").grid(row=2, column=2)
+            y2_entry = tk.Entry(dialog)
+            y2_entry.grid(row=2, column=3)
+
+            def create_line_from_dialog(name, x1, y1, x2, y2, dialog):
+                self.display_file.add_object(Line(name, [(float(x1), float(y1)), (float(x2), float(y2))]))
+                self.update_objects_list()
+                self.display_file.draw()
+                dialog.destroy()
+
+            create_button = tk.Button(dialog, text="Create", command=lambda: create_line_from_dialog(name.get(), x1_entry.get(), y1_entry.get(), x2_entry.get(), y2_entry.get(), dialog))
+            create_button.grid(row=3, column=0, columnspan=2, pady=5)
+
+        self.line_create_button = tk.Button(self.manipulation_frame, text="Create Line", command=lambda: open_line_dialog())
         self.line_create_button.grid(row=0, column=1, padx=5, pady=5)
 
-        self.wireframe_create_button = tk.Button(self.manipulation_frame, text="Create Wireframe", command=lambda: None)
+        def open_wireframe_dialog():
+            dialog = tk.Toplevel(self.canvas.winfo_toplevel())
+            dialog.title("Create Wireframe")
+
+            tk.Label(dialog, text="Name:").grid(row=0, column=0)
+            name = tk.Entry(dialog)
+            name.grid(row=0, column=1)
+
+            tk.Label(dialog, text="points ():").grid(row=1, column=0)
+            points_entry = tk.Entry(dialog)
+            points_entry.grid(row=1, column=1)
+
+            def create_wireframe_from_dialog(name, points, dialog):
+                points = list(literal_eval(points))
+                self.display_file.add_object(Wireframe(name, points))
+                self.update_objects_list()
+                self.display_file.draw()
+                dialog.destroy()
+
+            create_button = tk.Button(dialog, text="Create", command=lambda: create_wireframe_from_dialog(name.get(), points_entry.get(), dialog))
+            create_button.grid(row=4, column=0, columnspan=2, pady=5)
+
+        self.wireframe_create_button = tk.Button(self.manipulation_frame, text="Create Wireframe", command=lambda: open_wireframe_dialog())
         self.wireframe_create_button.grid(row=0, column=2, padx=5, pady=5)
 
     def zoom(self, event):

@@ -37,7 +37,7 @@ class Line(Drawable):
 class Wireframe(Drawable):
 
     def __init__(self, name, points):
-        assert len(points) > 3, "Número de pontos precisa ser > 3 para criar um Wireframe"
+        assert len(points) >= 3, "Número de pontos precisa ser > 3 para criar um Wireframe"
         super().__init__("wireframe", name, points)
 
     def draw(self, canvas, window, viewport):
