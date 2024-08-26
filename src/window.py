@@ -16,6 +16,9 @@ class Window:
         self.bounds[3] += offset[1]
 
     def set_zoom(self, factor):
+        if factor >= 4.0 or factor <= 0.1:
+            return
+
         self.zoom_factor = factor
         cx = (INITIAL_WINDOW[0] + INITIAL_WINDOW[1]) / 2
         cy = (INITIAL_WINDOW[2] + INITIAL_WINDOW[3]) / 2
@@ -25,7 +28,7 @@ class Window:
         self.bounds[1] = self.offset[0] + cx + width / 2
         self.bounds[2] = self.offset[1] + cy - height / 2
         self.bounds[3] = self.offset[1] + cy + height / 2
-    
+
     def zoom_in(self):
         self.set_zoom(self.zoom_factor + 0.05)
 
@@ -33,16 +36,20 @@ class Window:
         self.set_zoom(self.zoom_factor - 0.05)
 
     def move_up(self):
-        self.increase_offset([0.0, 5.0])
+        height = self.bounds[3] - self.bounds[2]
+        self.increase_offset([0.0, 0.01 * height])
 
     def move_down(self):
-        self.increase_offset([0.0, -5.0])
+        height = self.bounds[3] - self.bounds[2]
+        self.increase_offset([0.0, -0.01 * height])
 
     def move_left(self):
-        self.increase_offset([-5.0, 0.0])
+        width = self.bounds[1] - self.bounds[0]
+        self.increase_offset([-0.01 * width, 0.0])
 
     def move_right(self):
-        self.increase_offset([5.0, 0.0])
+        width = self.bounds[1] - self.bounds[0]
+        self.increase_offset([0.01 * width, 0.0])
 
     def viewport_transform(self, point, viewport):
         x_viewport = ((point[0] - self.bounds[0]) / (self.bounds[1] - self.bounds[0])) * (viewport[1] - viewport[0])

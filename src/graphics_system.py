@@ -9,14 +9,14 @@ class GraphicsSystem:
 
     def __init__(self):
         self.root = tk.Tk()
-        
+
         self.viewport = INITIAL_VIEWPORT
         self.window = [-100, 100, -100, 100]
 
         self.window = Window()
 
         self.last_mouse_position = None
-        
+
         self.main_frame = tk.Frame(self.root, bg="lightgray")
         self.main_frame.pack(fill=tk.BOTH, expand=True)
 
@@ -33,7 +33,7 @@ class GraphicsSystem:
         self.create_objects_list()
         self.create_nav_buttons()
         self.create_manipulation_buttons()
-    
+
     def create_objects_list(self):
         self.objects_frame = tk.Frame(self.menu_frame, bg="lightgray", padx=5, pady=5)
         self.objects_frame.pack(side=tk.TOP)
@@ -95,7 +95,7 @@ class GraphicsSystem:
 
         self.wireframe_create_button = tk.Button(self.manipulation_frame, text="Create Wireframe", command=lambda: None)
         self.wireframe_create_button.grid(row=0, column=2, padx=5, pady=5)
-    
+
     def zoom(self, event):
         if event.delta > 0:
             self.zoom_in()
@@ -109,7 +109,7 @@ class GraphicsSystem:
     def zoom_in(self):
         self.window.zoom_in()
         self.display_file.draw()
-    
+
     def move(self, event):
         if self.last_mouse_position is None:
             self.last_mouse_position = (event.x, event.y)
@@ -118,7 +118,16 @@ class GraphicsSystem:
         dy = event.y - self.last_mouse_position[1]
         self.last_mouse_position = (event.x, event.y)
 
-        self.window.increase_offset([-dx, dy])
+        if dx > 0:
+            self.window.move_left()
+        elif dx < 0:
+            self.window.move_right()
+
+        if dy > 0:
+            self.window.move_up()
+        elif dy < 0:
+            self.window.move_down()
+
         self.display_file.draw()
     
     def reset_move(self, event):
