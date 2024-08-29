@@ -5,7 +5,7 @@ from ast import literal_eval
 from  window import Window
 from display_file import DisplayFile
 from drawable import Point, Line, Wireframe
-from constants import VIEWPORT_WIDTH, VIEWPORT_HEIGHT, INITIAL_VIEWPORT, INITIAL_WINDOW
+from constants import VIEWPORT_WIDTH, VIEWPORT_HEIGHT, INITIAL_VIEWPORT
 
 
 class GraphicsSystem:
@@ -107,10 +107,13 @@ class GraphicsSystem:
             y_entry.grid(row=2, column=1)
 
             def create_point_from_dialog(name, x, y, dialog):
-                self.display_file.add_object(Point(name, [(float(x), float(y))]))
-                self.update_objects_list()
-                self.display_file.draw()
-                dialog.destroy()
+                try:
+                    self.display_file.add_object(Point(name, [(float(x), float(y))]))
+                    self.update_objects_list()
+                    self.display_file.draw()
+                except:
+                    print("Parece que o ponto não foi especificado de forma correta")
+                    dialog.destroy()
 
             create_button = tk.Button(dialog, text="Create", command=lambda: create_point_from_dialog(name.get(), x_entry.get(), y_entry.get(), dialog))
             create_button.grid(row=3, column=0, columnspan=2, pady=5)
@@ -143,10 +146,13 @@ class GraphicsSystem:
             y2_entry.grid(row=2, column=3)
 
             def create_line_from_dialog(name, x1, y1, x2, y2, dialog):
-                self.display_file.add_object(Line(name, [(float(x1), float(y1)), (float(x2), float(y2))]))
-                self.update_objects_list()
-                self.display_file.draw()
-                dialog.destroy()
+                try:
+                    self.display_file.add_object(Line(name, [(float(x1), float(y1)), (float(x2), float(y2))]))
+                    self.update_objects_list()
+                    self.display_file.draw()
+                except:
+                    print("Parece que os pontos da reta não foram especificados de forma correta")
+                    dialog.destroy()
 
             create_button = tk.Button(dialog, text="Create", command=lambda: create_line_from_dialog(name.get(), x1_entry.get(), y1_entry.get(), x2_entry.get(), y2_entry.get(), dialog))
             create_button.grid(row=3, column=0, columnspan=2, pady=5)
@@ -162,15 +168,19 @@ class GraphicsSystem:
             name = tk.Entry(dialog)
             name.grid(row=0, column=1)
 
-            tk.Label(dialog, text="points ():").grid(row=1, column=0)
+            tk.Label(dialog, text="points like (x1,y1),(x2,y2)...:").grid(row=1, column=0)
             points_entry = tk.Entry(dialog)
             points_entry.grid(row=1, column=1)
 
             def create_wireframe_from_dialog(name, points, dialog):
-                points = list(literal_eval(points))
-                self.display_file.add_object(Wireframe(name, points))
-                self.update_objects_list()
-                self.display_file.draw()
+                try:
+                    points = list(literal_eval(points))
+                    self.display_file.add_object(Wireframe(name, points))
+                    self.update_objects_list()
+                    self.display_file.draw()
+                except:
+                    print("Parece que os pontos do poligono não foram especificados de forma correta")
+
                 dialog.destroy()
 
             create_button = tk.Button(dialog, text="Create", command=lambda: create_wireframe_from_dialog(name.get(), points_entry.get(), dialog))

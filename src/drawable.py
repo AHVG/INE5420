@@ -1,12 +1,12 @@
-import copy
+import numpy as np
 
 
 class Drawable:
 
-    def __init__(self, kind: str, name: str, points: list[tuple[float, float]]):
+    def __init__(self, kind, name, points):
         self.kind = kind
         self.name = name
-        self.points = copy.deepcopy(points)
+        self.points = np.array(points, dtype=np.float64)
 
     def draw(self, canvas, window, viewport):
         pass
