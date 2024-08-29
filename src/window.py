@@ -1,3 +1,4 @@
+import numpy as np
 from constants import INITIAL_WINDOW
 
 
@@ -5,7 +6,7 @@ class Window:
 
     def __init__(self):
         self.zoom_factor = 1.0
-        self.offset = [0.0, 0.0]
+        self.offset = np.array((0, 0))
         self.bounds = list(INITIAL_WINDOW)
 
     def increase_offset(self, offset):
