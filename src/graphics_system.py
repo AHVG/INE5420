@@ -83,8 +83,8 @@ class GraphicsSystem:
         self.canvas.bind("<ButtonRelease-1>", self.reset_move)
 
         self.canvas.bind("<MouseWheel>", self.zoom)  # Windows somente?
-        self.canvas.bind("<Button-4>", lambda _: self.zoom_out())  # Linux (scroll up)
-        self.canvas.bind("<Button-5>", lambda _: self.zoom_in())  # Linux (scroll down)
+        self.canvas.bind("<Button-4>", lambda _: self.zoom_in())  # Linux (scroll up)
+        self.canvas.bind("<Button-5>", lambda _: self.zoom_out())  # Linux (scroll down)
 
     def create_manipulation_buttons(self):
         self.manipulation_frame = tk.LabelFrame(self.menu_frame, text="Manipulation", bg="lightgray", relief="groove", borderwidth=2, font=("Arial", 14,))
