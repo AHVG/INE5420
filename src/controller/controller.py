@@ -1,7 +1,10 @@
+import numpy as np
+
 from model.window import Window
 from model.viewport import Viewport
 from model.display_file import DisplayFile
 from model.drawable import Point, Line, Wireframe
+from model.transformation import Transformation2D
 
 
 class Controller:
@@ -10,6 +13,7 @@ class Controller:
         self.window = Window()
         self.viewport = Viewport(self.window)
         self.display_file = DisplayFile()
+        self.transformation = None
 
     def zoom_out(self, factor):
         self.window.zoom_out(factor)
@@ -45,3 +49,25 @@ class Controller:
         self.viewport.set_aspect_ratio(aspect_ratio)
         self.window.set_aspect_ratio(aspect_ratio)
 
+    def setup_transformation(self, index):
+        drawable = self.display_file.objects[index]
+        self.transformation = Transformation2D(drawable)
+
+    def rotate_relative_to_origin(self, angle):
+        self.transformation.rotation(np.radians(angle), (0, 0))
+
+    def rotate_relative_to_center_of_object(self, angle):
+        self.transformation.rotation(np.radians(angle))
+
+    def rotate_relative_to_point(self, angle, point):
+        self.transformation.rotation(np.radians(angle), point)
+
+    def translate(self, displacement):
+        self.transformation.translation(displacement)
+
+    def scale(self, factor):
+        self.transformation.escalation(factor)
+
+    def apply(self):
+        self.transformation.apply()
+        self.transformation = None

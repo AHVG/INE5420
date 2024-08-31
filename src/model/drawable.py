@@ -3,10 +3,11 @@ import numpy as np
 
 class Drawable:
 
-    def __init__(self, kind, name, points):
+    def __init__(self, kind, name, points, color="#000000"):
         self.kind = kind
         self.name = name
         self.points = np.array(points, dtype=np.float64)
+        self.color = color
 
     def draw(self, canvas):
         pass
