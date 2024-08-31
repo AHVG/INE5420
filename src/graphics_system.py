@@ -113,6 +113,7 @@ class GraphicsSystem:
                     self.display_file.draw()
                 except:
                     print("Parece que o ponto não foi especificado de forma correta")
+                finally:
                     dialog.destroy()
 
             create_button = tk.Button(dialog, text="Create", command=lambda: create_point_from_dialog(name.get(), x_entry.get(), y_entry.get(), dialog))
@@ -152,6 +153,7 @@ class GraphicsSystem:
                     self.display_file.draw()
                 except:
                     print("Parece que os pontos da reta não foram especificados de forma correta")
+                finally:
                     dialog.destroy()
 
             create_button = tk.Button(dialog, text="Create", command=lambda: create_line_from_dialog(name.get(), x1_entry.get(), y1_entry.get(), x2_entry.get(), y2_entry.get(), dialog))
@@ -180,8 +182,8 @@ class GraphicsSystem:
                     self.display_file.draw()
                 except:
                     print("Parece que os pontos do poligono não foram especificados de forma correta")
-
-                dialog.destroy()
+                finally:
+                    dialog.destroy()
 
             create_button = tk.Button(dialog, text="Create", command=lambda: create_wireframe_from_dialog(name.get(), points_entry.get(), dialog))
             create_button.grid(row=4, column=0, columnspan=2, pady=5)
