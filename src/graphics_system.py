@@ -13,7 +13,6 @@ class GraphicsSystem:
         self.root = tk.Tk()
 
         self.viewport = INITIAL_VIEWPORT
-        self.window = [-100, 100, -100, 100]
 
         self.window = Window()
 
@@ -22,7 +21,7 @@ class GraphicsSystem:
         self.main_frame = tk.Frame(self.root, bg="lightgray")
         self.main_frame.pack(fill=tk.BOTH, expand=True)
         
-        self.transcript_frame = tk.Text(self.main_frame, width=100, height = 10, bg="lightgray", relief="groove", borderwidth=2, font=("Arial", 14, "bold"))
+        self.transcript_frame = tk.Text(self.main_frame, width=100, height = 10, bg="white", relief="groove", borderwidth=2, font=("Arial", 14, "bold"))
         self.transcript_frame.pack(side=tk.BOTTOM, padx=10, pady=10)
 
         self.canvas_frame = tk.LabelFrame(self.main_frame, text="Viewport", width=200, bg="lightgray", relief="groove", borderwidth=2, font=("Arial", 14, "bold"))
