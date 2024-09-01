@@ -31,11 +31,11 @@ class Window:
         self.width = Window.INITIAL_WINDOW_WIDTH * factor
         self.height = Window.INITIAL_WINDOW_HEIGHT * factor
 
-    def zoom_in(self):
-        self.set_zoom(self.zoom_factor - 0.05)
+    def zoom_in(self, selected_zoom_factor):
+        self.set_zoom(self.zoom_factor - selected_zoom_factor/100)
 
-    def zoom_out(self):
-        self.set_zoom(self.zoom_factor + 0.05)
+    def zoom_out(self, selected_zoom_factor):
+        self.set_zoom(self.zoom_factor + selected_zoom_factor/100)
 
     def move_up(self):
         self.increase_offset([0.0, 0.01 * self.height])

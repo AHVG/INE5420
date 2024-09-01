@@ -1,5 +1,4 @@
 import tkinter as tk
-
 from ast import literal_eval
 
 from  window import Window
@@ -22,9 +21,13 @@ class GraphicsSystem:
 
         self.main_frame = tk.Frame(self.root, bg="lightgray")
         self.main_frame.pack(fill=tk.BOTH, expand=True)
+        
+        self.transcript_frame = tk.Text(self.main_frame, width=100, height = 10, bg="lightgray", relief="groove", borderwidth=2, font=("Arial", 14, "bold"))
+        self.transcript_frame.pack(side=tk.BOTTOM, padx=10, pady=10)
 
-        self.canvas_frame = tk.Frame(self.main_frame)
+        self.canvas_frame = tk.LabelFrame(self.main_frame, text="Viewport", width=200, bg="lightgray", relief="groove", borderwidth=2, font=("Arial", 14, "bold"))
         self.canvas_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=10, pady=10)
+
 
         self.canvas = tk.Canvas(self.canvas_frame, width=VIEWPORT_WIDTH, height=VIEWPORT_HEIGHT, bg="white")
         self.canvas.pack()
@@ -34,13 +37,15 @@ class GraphicsSystem:
         self.menu_frame.pack(side=tk.LEFT, fill=tk.Y, padx=10, pady=10)
 
         self.create_objects_list()
+        self.window_frame = tk.LabelFrame(self.menu_frame, text="Window", width=200, bg="lightgray", relief="groove", borderwidth=2, font=("Arial", 14, "bold"))
+        self.window_frame.pack(side=tk.TOP, padx=10, pady=10)
+
         self.create_nav_buttons()
         self.create_manipulation_buttons()
 
     def create_objects_list(self):
-        self.objects_frame = tk.Frame(self.menu_frame, bg="lightgray", padx=5, pady=5)
-        self.objects_frame.pack(side=tk.TOP)
-
+        self.objects_frame = tk.LabelFrame(self.menu_frame, text="Objetos", width=200, bg="lightgray", relief="groove", borderwidth=2, font=("Arial", 14, "bold"))
+        self.objects_frame.pack(side=tk.TOP, padx=5, pady=5)
         self.objects_listbox = tk.Listbox(self.objects_frame)
         self.objects_listbox.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
 
@@ -52,7 +57,7 @@ class GraphicsSystem:
             self.objects_listbox.insert(tk.END, o.name)
 
     def create_nav_buttons(self):
-        self.nav_frame = tk.LabelFrame(self.menu_frame, text="Navigation", width=200, bg="lightgray", relief="groove", borderwidth=2, font=("Arial", 14,))
+        self.nav_frame = tk.LabelFrame(self.window_frame, text="Navigation", width=200, bg="lightgray", relief="groove", borderwidth=2, font=("Arial", 14,))
         self.nav_frame.pack(side=tk.TOP, padx=5, pady=5)
 
         self.zoom_buttons = tk.Frame(self.nav_frame, bg="lightgray")
@@ -63,6 +68,16 @@ class GraphicsSystem:
 
         self.zoom_out_button = tk.Button(self.zoom_buttons, text="Zoom Out", command=self.zoom_out)
         self.zoom_out_button.grid(row=0, column=1, padx=5, pady=5)
+
+        self.zoom_factor_entry_label = tk.Label(self.zoom_buttons, text="Passo:")
+        self.zoom_factor_entry_label.grid(row=0, column=2, padx=5, pady=5)
+
+        self.zoom_factor_entry_value = tk.Entry(self.zoom_buttons, width=5)
+        self.zoom_factor_entry_value.grid(row=0, column=3, padx=5, pady=5) 
+        self.zoom_factor_entry_value.insert(0, "5") 
+
+        label_percent = tk.Label(self.zoom_buttons, text="%")
+        label_percent.grid(row=0, column=4, padx=5, pady=5)
 
         self.directions_buttons = tk.Frame(self.nav_frame, bg="lightgray")
         self.directions_buttons.grid(row=2, column=0, padx=5, pady=5)
@@ -87,7 +102,7 @@ class GraphicsSystem:
         self.canvas.bind("<Button-5>", lambda _: self.zoom_out())  # Linux (scroll down)
 
     def create_manipulation_buttons(self):
-        self.manipulation_frame = tk.LabelFrame(self.menu_frame, text="Manipulation", bg="lightgray", relief="groove", borderwidth=2, font=("Arial", 14,))
+        self.manipulation_frame = tk.LabelFrame(self.window_frame, text="Manipulation", bg="lightgray", relief="groove", borderwidth=2, font=("Arial", 14,))
         self.manipulation_frame.pack(side=tk.TOP, padx=10, pady=10)
 
         def open_point_dialog():
@@ -112,7 +127,8 @@ class GraphicsSystem:
                     self.update_objects_list()
                     self.display_file.draw()
                 except:
-                    print("Parece que o ponto não foi especificado de forma correta")
+                    print("Parece que o ponto não foi especificado de forma correta.")
+                    self.transcript_frame.insert(tk.END, "Parece que o ponto não foi especificado de forma correta.\n")
                 finally:
                     dialog.destroy()
 
@@ -152,7 +168,9 @@ class GraphicsSystem:
                     self.update_objects_list()
                     self.display_file.draw()
                 except:
-                    print("Parece que os pontos da reta não foram especificados de forma correta")
+                    print("Parece que os pontos da reta não foram especificados de forma correta.")
+                    self.transcript_frame.insert(tk.END, "Parece que os pontos da reta não foram especificados de forma correta.\n")
+
                 finally:
                     dialog.destroy()
 
@@ -181,7 +199,8 @@ class GraphicsSystem:
                     self.update_objects_list()
                     self.display_file.draw()
                 except:
-                    print("Parece que os pontos do poligono não foram especificados de forma correta")
+                    print("Parece que os pontos do poligono não foram especificados de forma correta.")
+                    self.transcript_frame.insert(tk.END, "Parece que os pontos do poligono não foram especificados de forma correta.\n")
                 finally:
                     dialog.destroy()
 
@@ -197,13 +216,29 @@ class GraphicsSystem:
         elif event.delta < 0:
             self.zoom_out()
 
+    def zoom_factor_value_is_valid(self):
+        for character in self.zoom_factor_entry_value.get():
+            if character not in [str(i) for i in range(10)]:
+                print("Parece que o passo não foi especificado da forma correta.")
+                self.transcript_frame.insert(tk.END, "Parece que o passo não foi especificado da forma correta.\n")
+                return False
+        return True
+
     def zoom_out(self):
-        self.window.zoom_out()
-        self.display_file.draw()
+        if self.zoom_factor_value_is_valid():
+            self.window.zoom_out(int(self.zoom_factor_entry_value.get()))
+            self.display_file.draw()
+        else:
+            self.zoom_factor_entry_value.delete(0, tk.END)
+            self.zoom_factor_entry_value.insert(0, "5")
 
     def zoom_in(self):
-        self.window.zoom_in()
-        self.display_file.draw()
+        if self.zoom_factor_value_is_valid():
+            self.window.zoom_in(int(self.zoom_factor_entry_value.get()))
+            self.display_file.draw()
+        else:
+            self.zoom_factor_entry_value.delete(0, tk.END)
+            self.zoom_factor_entry_value.insert(0, "5")
 
     def move(self, event):
         if self.last_mouse_position is None:
