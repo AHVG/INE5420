@@ -3,22 +3,23 @@ import numpy as np
 
 class Window:
 
-    INITIAL_WINDOW_WIDTH = 200.0
-    INITIAL_WINDOW_HEIGHT = 200.0
-    INITIAL_WINDOW_ANGLE = 0.0
+    INITIAL_WIDTH = 200.0
+    INITIAL_HEIGHT = 200.0
+
+    INITIAL_ANGLE = 0.0
     INITIAL_OFFSET = np.array([0, 0], dtype=np.float64)
+    INITIAL_ZOOM_FACTOR = 1.0
 
     MAX_ZOOM = 4.0
     MIN_ZOOM = 0.1
 
     def __init__(self):
-        self.zoom_factor = 1.0
-        
-        self.offset = Window.INITIAL_OFFSET
-        self.angle = Window.INITIAL_WINDOW_ANGLE
+        self.width = Window.INITIAL_WIDTH
+        self.height = Window.INITIAL_HEIGHT
 
-        self.width = Window.INITIAL_WINDOW_WIDTH
-        self.height = Window.INITIAL_WINDOW_HEIGHT
+        self.zoom_factor = Window.INITIAL_ZOOM_FACTOR
+        self.offset = Window.INITIAL_OFFSET
+        self.angle = Window.INITIAL_ANGLE
 
     def increase_offset(self, offset):
         self.offset += np.array(offset, dtype=np.float64)
@@ -28,8 +29,8 @@ class Window:
             return
 
         self.zoom_factor = factor
-        self.width = Window.INITIAL_WINDOW_WIDTH * factor
-        self.height = Window.INITIAL_WINDOW_HEIGHT * factor
+        self.width = Window.INITIAL_WIDTH * factor
+        self.height = Window.INITIAL_HEIGHT * factor
 
     def zoom_in(self, selected_zoom_factor):
         self.set_zoom(self.zoom_factor - selected_zoom_factor/100)
