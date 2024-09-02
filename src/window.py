@@ -25,8 +25,11 @@ class Window:
         self.offset += np.array(offset, dtype=np.float64)
 
     def set_zoom(self, factor):
-        if factor >= Window.MAX_ZOOM or factor <= Window.MIN_ZOOM:
-            return
+        if factor >= Window.MAX_ZOOM:
+            factor = Window.MAX_ZOOM
+
+        if factor <= Window.MIN_ZOOM:
+            factor = Window.MIN_ZOOM
 
         self.zoom_factor = factor
         self.width = Window.INITIAL_WIDTH * factor

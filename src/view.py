@@ -1,5 +1,6 @@
 import tkinter as tk
 
+from datetime import datetime
 from ast import literal_eval
 
 from constants import VIEWPORT_WIDTH, VIEWPORT_HEIGHT
@@ -16,16 +17,14 @@ class View:
         self.main_frame = tk.Frame(self.root, bg="lightgray")
         self.main_frame.pack(fill=tk.BOTH, expand=True)
         
-        self.transcript_frame = tk.Text(self.main_frame, width=100, height = 10, bg="white", relief="groove", borderwidth=2, font=("Arial", 14, "bold"))
-        self.transcript_frame.pack(side=tk.BOTTOM, padx=10, pady=10)
+        self.transcript_frame = tk.Text(self.main_frame, width=125, height = 10, bg="white", relief="groove", borderwidth=2, font=("Arial", 14, "bold"))
+        self.transcript_frame.pack(side=tk.BOTTOM, expand=True, padx=10, pady=10)
 
         self.canvas_frame = tk.LabelFrame(self.main_frame, text="Viewport", width=200, bg="lightgray", relief="groove", borderwidth=2, font=("Arial", 14, "bold"))
         self.canvas_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=10, pady=10)
 
         self.canvas = tk.Canvas(self.canvas_frame, width=VIEWPORT_WIDTH, height=VIEWPORT_HEIGHT, bg="white")
         self.canvas.pack()
-
-        self.controller.display_file.canvas = self.canvas
 
         self.menu_frame = tk.LabelFrame(self.main_frame, text="Menu", width=200, bg="lightgray", relief="groove", borderwidth=2, font=("Arial", 14, "bold"))
         self.menu_frame.pack(side=tk.LEFT, fill=tk.Y, padx=10, pady=10)
@@ -37,7 +36,15 @@ class View:
         self.create_navigation_section()
         self.create_manipulation_section()
 
+        self.controller.view = self
+        self.controller.display_file.canvas = self.canvas
         self.controller.display_file.draw()
+    
+    def log_message(self, message: str):
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        log_entry = f"[{timestamp}] {message}\n"
+        self.transcript_frame.insert(tk.END, log_entry)
+        self.transcript_frame.see(tk.END)
 
     def create_objects_list_section(self):
         self.objects_frame = tk.LabelFrame(self.menu_frame, text="Objetos", width=200, bg="lightgray", relief="groove", borderwidth=2, font=("Arial", 14, "bold"))
@@ -121,9 +128,9 @@ class View:
                     self.controller.create_point(name, float(x), float(y))
                     self.update_objects_list()
                     self.controller.display_file.draw()
+                    self.log_message(f"Criando Point chamada {name} na coordenada ({x}, {y})")
                 except:
-                    self.transcript_frame.insert(tk.END, "Parece que o ponto não foi especificado de forma correta.\n")
-                    self.transcript_frame.see(tk.END)
+                    self.log_message("Parece que o ponto não foi especificado de forma correta.")
                 finally:
                     dialog.destroy()
 
@@ -162,9 +169,9 @@ class View:
                     self.controller.create_line(name, float(x1), float(y1), float(x2), float(y2))
                     self.update_objects_list()
                     self.controller.display_file.draw()
+                    self.log_message(f"Criando Line chamada {name} com os pontos ({x1}, {y1}) e ({x2}, {y2})")
                 except:
-                    self.transcript_frame.insert(tk.END, "Parece que os pontos da reta não foram especificados de forma correta.\n")
-                    self.transcript_frame.see(tk.END)
+                    self.log_message("Parece que os pontos da reta não foram especificados de forma correta.")
                 finally:
                     dialog.destroy()
 
@@ -192,9 +199,9 @@ class View:
                     self.controller.create_wireframe(name, points)
                     self.update_objects_list()
                     self.controller.display_file.draw()
+                    self.log_message(f"Criando Wireframe chamado {name} com os pontos {points}")
                 except:
-                    self.transcript_frame.insert(tk.END, "Parece que os pontos do poligono não foram especificados de forma correta.\n")
-                    self.transcript_frame.see(tk.END)
+                    self.log_message("Parece que os pontos do poligono não foram especificados de forma correta.")
                 finally:
                     dialog.destroy()
 
@@ -213,14 +220,14 @@ class View:
         self.last_mouse_position = (event.x, event.y)
 
         if dx > 0:
-            self.controller.move_left()
+            self.move_left()
         elif dx < 0:
-            self.controller.move_right()
+            self.move_right()
 
         if dy > 0:
-            self.controller.move_up()
+            self.move_up()
         elif dy < 0:
-            self.controller.move_down()
+            self.move_down()
 
         self.controller.display_file.draw()
 
@@ -228,15 +235,19 @@ class View:
         self.last_mouse_position = None
     
     def move_up(self):
+        self.log_message("Movimento a tela para cima.")
         self.controller.move_up()
 
     def move_down(self):
+        self.log_message("Movimento a tela para baixo.")
         self.controller.move_down()
 
     def move_left(self):
+        self.log_message("Movimento a tela para esquerda.")
         self.controller.move_left()
 
     def move_right(self):
+        self.log_message("Movimento a tela para direita.")
         self.controller.move_right()
 
     def zoom(self, event):
@@ -248,15 +259,21 @@ class View:
     def zoom_in(self):
         try:
             factor = float(self.zoom_factor_entry_value.get())
-            self.controller.zoom_in(factor)
         except:
+            self.log_message("Valor de fator de zoom inválido. Tente valores flutuantes.")
             self.zoom_factor_entry_value.delete(0, tk.END)
             self.zoom_factor_entry_value.insert(0, "5")
+        finally:
+            self.log_message(f"Dando zoom in com fator de {factor}%.")
+            self.controller.zoom_in(factor)
 
     def zoom_out(self):
         try:
             factor = float(self.zoom_factor_entry_value.get())
-            self.controller.zoom_out(factor)
         except:
+            self.log_message("Valor de fator de zoom inválido. Tente valores flutuantes.")
             self.zoom_factor_entry_value.delete(0, tk.END)
             self.zoom_factor_entry_value.insert(0, "5")
+        else:
+            self.log_message(f"Dando zoom out com fator de {factor}%.")
+            self.controller.zoom_out(factor)
