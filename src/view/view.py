@@ -2,7 +2,8 @@ import tkinter as tk
 
 from datetime import datetime
 
-from constants import VIEWPORT_WIDTH, VIEWPORT_HEIGHT
+from model.viewport import Viewport
+
 from view.base_ui_component import BaseUIComponent
 from view.attached_window import WindowToCreatePoint, WindowToCreateLine, WindowToCreateWireframe
 
@@ -30,7 +31,7 @@ class View(BaseUIComponent):
         self.canvas_frame = tk.LabelFrame(self.main_frame, text="Viewport", width=200, bg="lightgray", relief="groove", borderwidth=2, font=("Arial", 14, "bold"))
         self.canvas_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=10, pady=10)
 
-        self.canvas = tk.Canvas(self.canvas_frame, width=VIEWPORT_WIDTH, height=VIEWPORT_HEIGHT, bg="white")
+        self.canvas = tk.Canvas(self.canvas_frame, width=Viewport.WIDTH, height=Viewport.HEIGHT, bg="white")
         self.canvas.pack()
 
         self.menu_frame = tk.LabelFrame(self.main_frame, text="Menu", width=200, bg="lightgray", relief="groove", borderwidth=2, font=("Arial", 14, "bold"))

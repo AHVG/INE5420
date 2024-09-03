@@ -20,6 +20,9 @@ class Window:
         self.zoom_factor = Window.INITIAL_ZOOM_FACTOR
         self.offset = Window.INITIAL_OFFSET
         self.angle = Window.INITIAL_ANGLE
+    
+    def get_bounds(self):
+        return np.array([self.offset[0] - self.width / 2.0, self.offset[0] + self.width / 2.0, self.offset[1] - self.height / 2.0, self.offset[1] + self.height / 2.0], dtype=np.float64)
 
     def increase_offset(self, offset):
         self.offset += np.array(offset, dtype=np.float64)

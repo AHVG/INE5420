@@ -17,4 +17,4 @@ class DisplayFile:
         assert self.canvas is not None, "Canvas não definido (DisplayFile)"
         self.canvas.delete("all")
         for o in self.objects:
-            o.draw(self.canvas, self.window, self.viewport)
+            o.draw(self.canvas, self.viewport)

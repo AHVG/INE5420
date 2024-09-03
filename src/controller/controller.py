@@ -1,6 +1,5 @@
-from constants import INITIAL_VIEWPORT
-
 from model.window import Window
+from model.viewport import Viewport
 from model.display_file import DisplayFile
 from model.drawable import Point, Line, Wireframe
 
@@ -10,8 +9,8 @@ class Controller:
     def __init__(self, view=None):
         self.view = view
 
-        self.viewport = INITIAL_VIEWPORT
         self.window = Window()
+        self.viewport = Viewport(self.window)
         self.display_file = DisplayFile(self.window, self.viewport)
 
     def zoom_out(self, factor):
