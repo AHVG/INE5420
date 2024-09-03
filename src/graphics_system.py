@@ -1,7 +1,7 @@
 import tkinter as tk
 
-from controller import Controller
-from view import View
+from controller.controller import Controller
+from view.view import View
 
 
 class GraphicsSystem:

@@ -1,4 +1,4 @@
-from drawable import Point, Line, Wireframe
+from model.drawable import Point, Line, Wireframe
 
 
 class DisplayFile:

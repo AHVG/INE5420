@@ -1,7 +1,8 @@
-from  window import Window
-from display_file import DisplayFile
 from constants import INITIAL_VIEWPORT
-from drawable import Point, Line, Wireframe
+
+from model.window import Window
+from model.display_file import DisplayFile
+from model.drawable import Point, Line, Wireframe
 
 
 class Controller:
