@@ -46,6 +46,8 @@ class WindowToCreatePoint(AttachedWindow):
 
             self.controller.create_point(name, x, y)
             self.view.draw_canvas()
+            self.view.update_objects_list()
+            self.view.log_message("Criando um Point com nome de %s no ponto %s", name, (x, y))
         finally:
             self.on_close()
 
@@ -89,6 +91,8 @@ class WindowToCreateLine(AttachedWindow):
             
             self.controller.create_line(name, x1, y1, x2, y2)
             self.view.draw_canvas()
+            self.view.update_objects_list()
+            self.view.log_message("Criando uma Line com nome de %s e com os pontos de %s", name, [(x1, y1), (x2, y2)])
         finally:
             self.on_close()
 
@@ -117,5 +121,7 @@ class WindowToCreateWireframe(AttachedWindow):
             
             self.controller.create_wireframe(name, points)
             self.view.draw_canvas()
+            self.view.update_objects_list()
+            self.view.log_message("Criando um Wireframe com nome de %s e com os pontos de %s", name, points)
         finally:
             self.on_close()

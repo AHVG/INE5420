@@ -12,25 +12,19 @@ class View(BaseUIComponent):
 
     def __init__(self, root, controller):
         self.root = root
-
         super().__init__(controller)
-
-        self.controller.view = self
-        self.controller.display_file.canvas = self.canvas
-        self.draw_canvas()
     
     def configure(self):
         self.last_mouse_position = None
 
         self.main_frame = tk.Frame(self.root, bg="lightgray")
         self.main_frame.pack(fill=tk.BOTH, expand=True)
-        
+
         self.transcript_frame = tk.Text(self.main_frame, width=125, height = 10, bg="white", relief="groove", borderwidth=2, font=("Arial", 14, "bold"))
         self.transcript_frame.pack(side=tk.BOTTOM, expand=True, padx=10, pady=10)
 
         self.canvas_frame = tk.LabelFrame(self.main_frame, text="Viewport", width=200, bg="lightgray", relief="groove", borderwidth=2, font=("Arial", 14, "bold"))
         self.canvas_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=10, pady=10)
-
         self.canvas = tk.Canvas(self.canvas_frame, width=Viewport.WIDTH, height=Viewport.HEIGHT, bg="white")
         self.canvas.pack()
 
@@ -42,6 +36,8 @@ class View(BaseUIComponent):
         self.window_frame.pack(side=tk.TOP, padx=10, pady=10)
         self.create_navigation_section()
         self.create_manipulation_section()
+
+        self.draw_canvas()
     
     def register_events(self):
         self.canvas.bind("<Shift-B1-Motion>", self.move)
@@ -62,6 +58,7 @@ class View(BaseUIComponent):
         self.point_create_button.config(command=lambda: WindowToCreatePoint(self, self.controller, self.canvas))
         self.line_create_button.config(command=lambda: WindowToCreateLine(self, self.controller, self.canvas))
         self.wireframe_create_button.config(command=lambda: WindowToCreateWireframe(self, self.controller, self.canvas))
+        self.objects_remove_button.config(command=self.remove_objects)
     
     def log_message(self, message: str):
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -72,7 +69,7 @@ class View(BaseUIComponent):
     def create_objects_list_section(self):
         self.objects_frame = tk.LabelFrame(self.menu_frame, text="Objetos", width=200, bg="lightgray", relief="groove", borderwidth=2, font=("Arial", 14, "bold"))
         self.objects_frame.pack(side=tk.TOP, padx=5, pady=5)
-        self.objects_listbox = tk.Listbox(self.objects_frame)
+        self.objects_listbox = tk.Listbox(self.objects_frame, selectmode=tk.MULTIPLE)
         self.objects_listbox.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
         self.update_objects_list()
 
@@ -131,6 +128,16 @@ class View(BaseUIComponent):
 
         self.wireframe_create_button = tk.Button(self.manipulation_frame, text="Create Wireframe",)
         self.wireframe_create_button.grid(row=0, column=2, padx=5, pady=5)
+    
+        self.objects_remove_button = tk.Button(self.manipulation_frame, text="Remove selected object",)
+        self.objects_remove_button.grid(row=1, column=1, padx=5, pady=5)
+    
+    def remove_objects(self):
+        indexes = self.objects_listbox.curselection()
+        self.log_message(f"Removendo os elementos {indexes}")
+        self.controller.remove_objects(indexes)
+        self.draw_canvas()
+        self.update_objects_list()
     
     def move(self, event):
         if self.last_mouse_position is None:

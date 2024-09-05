@@ -6,9 +6,7 @@ from model.drawable import Point, Line, Wireframe
 
 class Controller:
 
-    def __init__(self, view=None):
-        self.view = view
-
+    def __init__(self):
         self.window = Window()
         self.viewport = Viewport(self.window)
         self.display_file = DisplayFile()
@@ -40,5 +38,5 @@ class Controller:
     def create_wireframe(self, name, points):
         self.display_file.add_object(Wireframe(name, points))
 
-    def remove_object(self, index):
-        pass
+    def remove_objects(self, indexes):
+        self.display_file.remove_object(indexes)
