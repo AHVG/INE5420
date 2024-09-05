@@ -17,7 +17,7 @@ class View(BaseUIComponent):
 
         self.controller.view = self
         self.controller.display_file.canvas = self.canvas
-        self.controller.display_file.draw()
+        self.draw_canvas()
     
     def configure(self):
         self.last_mouse_position = None
@@ -48,8 +48,8 @@ class View(BaseUIComponent):
         self.canvas.bind("<ButtonRelease-1>", self.reset_move)
 
         self.canvas.bind("<MouseWheel>", self.zoom)  # Windows somente?
-        self.canvas.bind("<Button-4>", lambda _: self.controller.zoom_in(10))  # Linux (scroll up)
-        self.canvas.bind("<Button-5>", lambda _: self.controller.zoom_out(10))  # Linux (scroll down)
+        self.canvas.bind("<Button-4>", lambda _: self.zoom_in())  # Linux (scroll up)
+        self.canvas.bind("<Button-5>", lambda _: self.zoom_out())  # Linux (scroll down)
     
         self.zoom_in_button.config(command=self.zoom_in)
         self.zoom_out_button.config(command=self.zoom_out)
@@ -59,9 +59,9 @@ class View(BaseUIComponent):
         self.right_button.config(command=self.move_right)
         self.down_button.config(command=self.move_down)
         
-        self.point_create_button.config(command=lambda: WindowToCreatePoint(self.controller, self.canvas))
-        self.line_create_button.config(command=lambda: WindowToCreateLine(self.controller, self.canvas))
-        self.wireframe_create_button.config(command=lambda: WindowToCreateWireframe(self.controller, self.canvas))
+        self.point_create_button.config(command=lambda: WindowToCreatePoint(self, self.controller, self.canvas))
+        self.line_create_button.config(command=lambda: WindowToCreateLine(self, self.controller, self.canvas))
+        self.wireframe_create_button.config(command=lambda: WindowToCreateWireframe(self, self.controller, self.canvas))
     
     def log_message(self, message: str):
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -150,26 +150,28 @@ class View(BaseUIComponent):
         elif dy < 0:
             self.move_down()
 
-        self.controller.display_file.draw()
-
     def reset_move(self, _):
         self.last_mouse_position = None
     
     def move_up(self):
         self.log_message("Movimento a tela para cima.")
         self.controller.move_up()
+        self.draw_canvas()
 
     def move_down(self):
         self.log_message("Movimento a tela para baixo.")
         self.controller.move_down()
+        self.draw_canvas()
 
     def move_left(self):
         self.log_message("Movimento a tela para esquerda.")
         self.controller.move_left()
+        self.draw_canvas()
 
     def move_right(self):
         self.log_message("Movimento a tela para direita.")
         self.controller.move_right()
+        self.draw_canvas()
 
     def zoom(self, event):
         if event.delta > 0:
@@ -184,9 +186,10 @@ class View(BaseUIComponent):
             self.log_message("Valor de fator de zoom inválido. Tente valores flutuantes.")
             self.zoom_factor_entry_value.delete(0, tk.END)
             self.zoom_factor_entry_value.insert(0, "5")
-        finally:
+        else:
             self.log_message(f"Dando zoom in com fator de {factor}%.")
             self.controller.zoom_in(factor)
+            self.draw_canvas()
 
     def zoom_out(self):
         try:
@@ -198,3 +201,10 @@ class View(BaseUIComponent):
         else:
             self.log_message(f"Dando zoom out com fator de {factor}%.")
             self.controller.zoom_out(factor)
+            self.draw_canvas()
+
+    def draw_canvas(self):
+        self.canvas.delete("all")
+        for o in self.controller.display_file.objects:
+            o = self.controller.viewport.transform(o)
+            o.draw(self.canvas)
