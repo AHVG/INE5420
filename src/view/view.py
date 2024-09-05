@@ -67,7 +67,7 @@ class View(BaseUIComponent):
         self.transcript_frame.see(tk.END)
 
     def create_objects_list_section(self):
-        self.objects_frame = tk.LabelFrame(self.menu_frame, text="Objetos", width=200, bg="lightgray", relief="groove", borderwidth=2, font=("Arial", 14, "bold"))
+        self.objects_frame = tk.LabelFrame(self.menu_frame, text="Objects", width=200, bg="lightgray", relief="groove", borderwidth=2, font=("Arial", 14, "bold"))
         self.objects_frame.pack(side=tk.TOP, padx=5, pady=5)
         self.objects_listbox = tk.Listbox(self.objects_frame, selectmode=tk.MULTIPLE)
         self.objects_listbox.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
@@ -161,22 +161,22 @@ class View(BaseUIComponent):
         self.last_mouse_position = None
     
     def move_up(self):
-        self.log_message("Movimento a tela para cima.")
+        self.log_message("Moving window up")
         self.controller.move_up()
         self.draw_canvas()
 
     def move_down(self):
-        self.log_message("Movimento a tela para baixo.")
+        self.log_message("Moving window down")
         self.controller.move_down()
         self.draw_canvas()
 
     def move_left(self):
-        self.log_message("Movimento a tela para esquerda.")
+        self.log_message("Moving window left")
         self.controller.move_left()
         self.draw_canvas()
 
     def move_right(self):
-        self.log_message("Movimento a tela para direita.")
+        self.log_message("Moving window right")
         self.controller.move_right()
         self.draw_canvas()
 
@@ -190,11 +190,11 @@ class View(BaseUIComponent):
         try:
             factor = float(self.zoom_factor_entry_value.get())
         except:
-            self.log_message("Valor de fator de zoom inválido. Tente valores flutuantes.")
+            self.log_message("Invalid zoom factor, try float values")
             self.zoom_factor_entry_value.delete(0, tk.END)
             self.zoom_factor_entry_value.insert(0, "5")
         else:
-            self.log_message(f"Dando zoom in com fator de {factor}%.")
+            self.log_message(f"Zoom in using {factor}% zoom factor")
             self.controller.zoom_in(factor)
             self.draw_canvas()
 
@@ -202,11 +202,11 @@ class View(BaseUIComponent):
         try:
             factor = float(self.zoom_factor_entry_value.get())
         except:
-            self.log_message("Valor de fator de zoom inválido. Tente valores flutuantes.")
+            self.log_message("Invalid zoom factor, try float values")
             self.zoom_factor_entry_value.delete(0, tk.END)
             self.zoom_factor_entry_value.insert(0, "5")
         else:
-            self.log_message(f"Dando zoom out com fator de {factor}%.")
+            self.log_message(f"Zoom out using {factor}% zoom factor")
             self.controller.zoom_out(factor)
             self.draw_canvas()
 
