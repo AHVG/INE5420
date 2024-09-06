@@ -11,6 +11,5 @@ class DisplayFile:
         self.objects.append(object)
 
     def remove_object(self, indexes):
-        print(indexes)
         for i, index in enumerate(indexes):
             self.objects.pop(index - i)

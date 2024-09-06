@@ -66,6 +66,10 @@ class View(BaseUIComponent):
         self.transcript_frame.insert(tk.END, log_entry)
         self.transcript_frame.see(tk.END)
 
+        current_lines = int(self.transcript_frame.index('end-1c').split('.')[0])
+        if current_lines > 50:
+            self.transcript_frame.delete(1.0, f"{current_lines - 50}.0")
+
     def create_objects_list_section(self):
         self.objects_frame = tk.LabelFrame(self.menu_frame, text="Objects", width=200, bg="lightgray", relief="groove", borderwidth=2, font=("Arial", 14, "bold"))
         self.objects_frame.pack(side=tk.TOP, padx=5, pady=5)
