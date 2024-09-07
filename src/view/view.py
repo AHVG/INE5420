@@ -73,7 +73,7 @@ class View(BaseUIComponent):
     def create_objects_list_section(self):
         self.objects_frame = tk.LabelFrame(self.menu_frame, text="Objects", width=200, bg="lightgray", relief="groove", borderwidth=2, font=("Arial", 14, "bold"))
         self.objects_frame.pack(side=tk.TOP, padx=5, pady=5)
-        self.objects_listbox = tk.Listbox(self.objects_frame, selectmode=tk.MULTIPLE)
+        self.objects_listbox = tk.Listbox(self.objects_frame, selectmode=tk.SINGLE)
         self.objects_listbox.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
         self.update_objects_list()
 
@@ -137,9 +137,13 @@ class View(BaseUIComponent):
         self.objects_remove_button.grid(row=1, column=1, padx=5, pady=5)
     
     def remove_objects(self):
-        indexes = self.objects_listbox.curselection()
-        self.log_message(f"Removendo os elementos {indexes}")
-        self.controller.remove_objects(indexes)
+        index = self.objects_listbox.curselection()
+        try:
+            element = self.objects_listbox.get(0, tk.END)[index[0]]
+            self.log_message(f"Removendo o elemento {element}")
+        except:
+            self.log_message("Nenhum elemento foi selecionado")
+        self.controller.remove_objects(index)
         self.draw_canvas()
         self.update_objects_list()
     

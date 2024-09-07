@@ -9,6 +9,7 @@ class Controller:
     def __init__(self):
         self.window = Window()
         self.viewport = Viewport(self.window)
+        self.window.set_aspect_ratio((self.viewport.WIDTH, self.viewport.HEIGHT))
         self.display_file = DisplayFile()
 
     def zoom_out(self, factor):

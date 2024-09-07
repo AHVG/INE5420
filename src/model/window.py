@@ -55,3 +55,7 @@ class Window:
 
     def move_right(self):
         self.increase_offset([0.01 * self.width, 0.0])
+
+    def set_aspect_ratio(self, aspect_ratio):
+        self.width = aspect_ratio[0]
+        self.height = aspect_ratio[1]
