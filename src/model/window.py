@@ -58,3 +58,6 @@ class Window:
     def set_aspect_ratio(self, aspect_ratio):
         self.initial_width = aspect_ratio[0]
         self.initial_height = aspect_ratio[1]
+
+        self.width = aspect_ratio[0]
+        self.height = aspect_ratio[1]
