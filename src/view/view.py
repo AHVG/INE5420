@@ -6,6 +6,7 @@ from model.viewport import Viewport
 
 from view.base_ui_component import BaseUIComponent
 from view.attached_window import WindowToCreatePoint, WindowToCreateLine, WindowToCreateWireframe
+from view.my_canvas import MyCanvas
 
 
 class View(BaseUIComponent):
@@ -25,7 +26,7 @@ class View(BaseUIComponent):
 
         self.canvas_frame = tk.LabelFrame(self.main_frame, text="Viewport", width=200, bg="lightgray", relief="groove", borderwidth=2, font=("Arial", 14, "bold"))
         self.canvas_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=10, pady=10)
-        self.canvas = tk.Canvas(self.canvas_frame, width=Viewport.WIDTH, height=Viewport.HEIGHT, bg="white")
+        self.canvas = MyCanvas(self.canvas_frame, width=800, height=600, margin_size=20, bg="white")
         self.canvas.pack()
 
         self.menu_frame = tk.LabelFrame(self.main_frame, text="Menu", width=200, bg="lightgray", relief="groove", borderwidth=2, font=("Arial", 14, "bold"))
@@ -221,7 +222,7 @@ class View(BaseUIComponent):
             self.draw_canvas()
 
     def draw_canvas(self):
-        self.canvas.delete("all")
+        self.canvas.setup()
         for o in self.controller.display_file.objects:
             o = self.controller.viewport.transform(o)
             o.draw(self.canvas)
