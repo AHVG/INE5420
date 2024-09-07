@@ -138,11 +138,13 @@ class View(BaseUIComponent):
     
     def remove_objects(self):
         index = self.objects_listbox.curselection()
-        try:
-            element = self.objects_listbox.get(0, tk.END)[index[0]]
-            self.log_message(f"Removendo o elemento {element}")
-        except:
-            self.log_message("Nenhum elemento foi selecionado")
+        if len(index):
+            index = index[0]
+            element = self.objects_listbox.get(0, tk.END)[index]
+            self.log_message(f"Removing element called {element}")
+        else:
+            self.log_message("No element was selected")
+            return
         self.controller.remove_objects(index)
         self.draw_canvas()
         self.update_objects_list()

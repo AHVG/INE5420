@@ -10,6 +10,5 @@ class DisplayFile:
     def add_object(self, object):
         self.objects.append(object)
 
-    def remove_object(self, indexes):
-        for i, index in enumerate(indexes):
-            self.objects.pop(index - i)
+    def remove_object(self, index):
+        self.objects.pop(index)
