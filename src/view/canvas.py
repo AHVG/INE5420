@@ -1,7 +1,7 @@
 import tkinter as tk
 
 
-class MyCanvas(tk.Canvas):
+class Canvas(tk.Canvas):
     def __init__(self, parent, width, height, margin_size=20, **kwargs):
         super().__init__(parent, width=width, height=height, **kwargs)
         

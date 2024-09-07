@@ -3,9 +3,6 @@ import numpy as np
 
 class Window:
 
-    INITIAL_WIDTH = 200.0
-    INITIAL_HEIGHT = 200.0
-
     INITIAL_ANGLE = 0.0
     INITIAL_OFFSET = np.array([0, 0], dtype=np.float64)
     INITIAL_ZOOM_FACTOR = 1.0
@@ -14,8 +11,10 @@ class Window:
     MIN_ZOOM = 0.1
 
     def __init__(self):
-        self.width = Window.INITIAL_WIDTH
-        self.height = Window.INITIAL_HEIGHT
+        self.initial_width = 200.0
+        self.initial_height = 200.0
+        self.width = self.initial_width
+        self.height = self.initial_height
 
         self.zoom_factor = Window.INITIAL_ZOOM_FACTOR
         self.offset = Window.INITIAL_OFFSET
@@ -35,8 +34,8 @@ class Window:
             factor = Window.MIN_ZOOM
 
         self.zoom_factor = factor
-        self.width = Window.INITIAL_WIDTH * factor
-        self.height = Window.INITIAL_HEIGHT * factor
+        self.width = self.initial_width* factor
+        self.height = self.initial_height * factor
 
     def zoom_in(self, selected_zoom_factor):
         self.set_zoom(self.zoom_factor - selected_zoom_factor/100)
@@ -57,5 +56,5 @@ class Window:
         self.increase_offset([0.01 * self.width, 0.0])
 
     def set_aspect_ratio(self, aspect_ratio):
-        self.width = aspect_ratio[0]
-        self.height = aspect_ratio[1]
+        self.initial_width = aspect_ratio[0]
+        self.initial_height = aspect_ratio[1]
