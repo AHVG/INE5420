@@ -10,6 +10,10 @@ class WindowToCreateLine(AttachedWindow):
         self.name = tk.Entry(self)
         self.name.grid(row=0, column=1)
 
+        tk.Label(self, text="Color:").grid(row=0, column=2)
+        self.color_entry = tk.Entry(self)
+        self.color_entry.grid(row=0, column=3)
+
         tk.Label(self, text="x1:").grid(row=1, column=0)
         self.x1_entry = tk.Entry(self)
         self.x1_entry.grid(row=1, column=1)
@@ -27,7 +31,7 @@ class WindowToCreateLine(AttachedWindow):
         self.y2_entry.grid(row=2, column=3)
 
         self.create_button = tk.Button(self, text="Create")
-        self.create_button.grid(row=3, column=0, columnspan=2, pady=5)
+        self.create_button.grid(row=3, column=0, columnspan=4, pady=5)
     
     def register_events(self):
         self.create_button.configure(command=self.create_line_from_dialog)

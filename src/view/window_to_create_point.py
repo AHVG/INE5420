@@ -10,16 +10,20 @@ class WindowToCreatePoint(AttachedWindow):
         self.name = tk.Entry(self)
         self.name.grid(row=0, column=1)
 
+        tk.Label(self, text="Color:").grid(row=0, column=2)
+        self.color_entry = tk.Entry(self)
+        self.color_entry.grid(row=0, column=3)
+
         tk.Label(self, text="x:").grid(row=1, column=0)
         self.x_entry = tk.Entry(self)
         self.x_entry.grid(row=1, column=1)
 
-        tk.Label(self, text="y:").grid(row=2, column=0)
+        tk.Label(self, text="y:").grid(row=1, column=2)
         self.y_entry = tk.Entry(self)
-        self.y_entry.grid(row=2, column=1)
+        self.y_entry.grid(row=1, column=3)
 
         self.create_button = tk.Button(self, text="Create")
-        self.create_button.grid(row=3, column=0, columnspan=2, pady=5)
+        self.create_button.grid(row=2, column=0, columnspan=4, pady=5)
 
     def register_events(self):
         self.create_button.config(command=self.create_point_from_dialog)

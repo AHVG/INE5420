@@ -10,12 +10,16 @@ class WindowToCreateWireframe(AttachedWindow):
         self.name = tk.Entry(self)
         self.name.grid(row=0, column=1)
 
-        tk.Label(self, text="points like (x1,y1),(x2,y2)...:").grid(row=1, column=0)
+        tk.Label(self, text="Color:").grid(row=1, column=0)
+        self.color_entry = tk.Entry(self)
+        self.color_entry.grid(row=1, column=1)
+
+        tk.Label(self, text="points like (x1,y1),(x2,y2)...:").grid(row=2, column=0)
         self.points_entry = tk.Entry(self)
-        self.points_entry.grid(row=1, column=1)
+        self.points_entry.grid(row=2, column=1)
 
         self.create_button = tk.Button(self, text="Create")
-        self.create_button.grid(row=4, column=0, columnspan=2, pady=5)
+        self.create_button.grid(row=3, column=0, columnspan=2, pady=5)
     
     def register_events(self):
         self.create_button.configure(command=self.create_wireframe_from_dialog)
