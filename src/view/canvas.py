@@ -11,7 +11,7 @@ class Canvas(tk.Canvas):
     
     def setup(self):
         self.delete("all")
-        self.create_rectangle(self.margin_size, self.margin_size, self.width - self.margin_size, self.height - self.margin_size, outline="red")
+        # self.create_rectangle(self.margin_size, self.margin_size, self.width - self.margin_size, self.height - self.margin_size, outline="red")
 
     def get_aspect_ratio(self):
         return (self.width, self.height)
