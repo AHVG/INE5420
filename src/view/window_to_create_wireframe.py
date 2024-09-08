@@ -1,4 +1,7 @@
+import re
 import tkinter as tk
+
+from ast import literal_eval
 
 from view.attached_window import AttachedWindow
 
@@ -27,9 +30,14 @@ class WindowToCreateWireframe(AttachedWindow):
     def create_wireframe_from_dialog(self):
         try:
             name = self.name.get()
+            color = self.color_entry.get()
             points = list(literal_eval(self.points_entry.get()))
+
+            hex_pattern = re.compile(r'^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$')
+            if not bool(hex_pattern.match(color)):
+                raise TypeError("Valor hexadecimal para cor inválido")
             
-            self.controller.create_wireframe(name, points)
+            self.controller.create_wireframe(name, points, color)
             self.view.draw_canvas()
             self.view.update_objects_list()
             self.view.log_message(f"Creating Wireframe called {name} and with points {points}")

@@ -1,3 +1,4 @@
+import re
 import tkinter as tk
 
 from view.attached_window import AttachedWindow
@@ -31,10 +32,15 @@ class WindowToCreatePoint(AttachedWindow):
     def create_point_from_dialog(self):
         try:
             name = self.name.get()
+            color = self.color_entry.get()
             x = float(self.x_entry.get())
             y = float(self.y_entry.get())
 
-            self.controller.create_point(name, x, y)
+            hex_pattern = re.compile(r'^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$')
+            if not bool(hex_pattern.match(color)):
+                raise TypeError("Valor hexadecimal para cor inválido")
+
+            self.controller.create_point(name, x, y, color)
             self.view.draw_canvas()
             self.view.update_objects_list()
             self.view.log_message(f"Creating Point called {name} at point {(x, y)}")

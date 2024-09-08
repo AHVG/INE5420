@@ -33,14 +33,14 @@ class Controller:
     def move_right(self):
         self.window.move_right()
     
-    def create_point(self, name, x1, y1):
-        self.display_file.add_object(Point(name, [(x1, y1)]))
+    def create_point(self, name, x1, y1, color):
+        self.display_file.add_object(Point(name, [(x1, y1)], color))
 
-    def create_line(self, name, x1, y1, x2, y2):
-        self.display_file.add_object(Line(name, [(x1, y1), (x2, y2)]))
+    def create_line(self, name, x1, y1, x2, y2, color):
+        self.display_file.add_object(Line(name, [(x1, y1), (x2, y2)], color))
 
-    def create_wireframe(self, name, points):
-        self.display_file.add_object(Wireframe(name, points))
+    def create_wireframe(self, name, points, color):
+        self.display_file.add_object(Wireframe(name, points, color))
 
     def remove_objects(self, indexes):
         self.display_file.remove_object(indexes)

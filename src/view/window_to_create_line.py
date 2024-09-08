@@ -1,3 +1,4 @@
+import re
 import tkinter as tk
 
 from view.attached_window import AttachedWindow
@@ -39,14 +40,19 @@ class WindowToCreateLine(AttachedWindow):
     def create_line_from_dialog(self):
         try:
             name = self.name.get()
+            color = self.color_entry.get()
             x1 = float(self.x1_entry.get())
             y1 = float(self.y1_entry.get())
             x2 = float(self.x2_entry.get())
             y2 = float(self.y2_entry.get())
             
-            self.controller.create_line(name, x1, y1, x2, y2)
+            hex_pattern = re.compile(r'^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$')
+            if not bool(hex_pattern.match(color)):
+                raise TypeError("Valor hexadecimal para cor inválido")
+
+            self.controller.create_line(name, x1, y1, x2, y2, color)
             self.view.draw_canvas()
             self.view.update_objects_list()
-            self.view.log_message(f"Creating Line called {name} and with points {[(x1, y1), (x2, y2)]}")
+            self.view.log_message(f"Creating Line called {name} and with points {[(x1, y1), (x2, y2)]} of color {color}")
         finally:
             self.on_close()
