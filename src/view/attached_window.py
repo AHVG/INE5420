@@ -48,6 +48,8 @@ class WindowToCreatePoint(AttachedWindow):
             self.view.draw_canvas()
             self.view.update_objects_list()
             self.view.log_message(f"Creating Point called {name} at point {(x, y)}")
+        except:
+            self.view.log_message("Specify valid values to create a point")
         finally:
             self.on_close()
 
@@ -93,6 +95,8 @@ class WindowToCreateLine(AttachedWindow):
             self.view.draw_canvas()
             self.view.update_objects_list()
             self.view.log_message(f"Creating Line called {name} and with points {[(x1, y1), (x2, y2)]}")
+        except:
+            self.view.log_message("Specify valid values to create a line")
         finally:
             self.on_close()
 
@@ -123,5 +127,7 @@ class WindowToCreateWireframe(AttachedWindow):
             self.view.draw_canvas()
             self.view.update_objects_list()
             self.view.log_message(f"Creating Wireframe called {name} and with points {points}")
+        except:
+            self.view.log_message("Specify valid values to create a wireframe")
         finally:
             self.on_close()

@@ -1,12 +1,8 @@
 
 
 class Viewport:
-    WIDTH = 800
-    HEIGHT = 600
-    BOUNDS = (0, 800, 0, 600)
 
     def __init__(self, window):
-        self.bounds = Viewport.BOUNDS
         self.window = window
 
     def transform(self, drawable):
@@ -19,3 +15,11 @@ class Viewport:
             points.append([x_viewport, y_viewport])
         
         return drawable.__class__(drawable.name, points)
+
+    def set_window(self, window):
+        self.window = window
+    
+    def set_aspect_ratio(self, aspect_ratio):
+        self.width = aspect_ratio[0]
+        self.height = aspect_ratio[1]
+        self.bounds = (0, self.width, 0, self.height)

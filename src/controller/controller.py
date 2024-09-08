@@ -40,3 +40,8 @@ class Controller:
 
     def remove_objects(self, indexes):
         self.display_file.remove_object(indexes)
+
+    def set_aspect_ratio(self, aspect_ratio):
+        self.viewport.set_aspect_ratio(aspect_ratio)
+        self.window.set_aspect_ratio(aspect_ratio)
+

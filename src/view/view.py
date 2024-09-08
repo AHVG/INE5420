@@ -6,6 +6,7 @@ from model.viewport import Viewport
 
 from view.base_ui_component import BaseUIComponent
 from view.attached_window import WindowToCreatePoint, WindowToCreateLine, WindowToCreateWireframe
+from view.canvas import Canvas
 
 
 class View(BaseUIComponent):
@@ -25,8 +26,9 @@ class View(BaseUIComponent):
 
         self.canvas_frame = tk.LabelFrame(self.main_frame, text="Viewport", width=200, bg="lightgray", relief="groove", borderwidth=2, font=("Arial", 14, "bold"))
         self.canvas_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=10, pady=10)
-        self.canvas = tk.Canvas(self.canvas_frame, width=Viewport.WIDTH, height=Viewport.HEIGHT, bg="white")
+        self.canvas = Canvas(self.canvas_frame, width=800, height=600, margin_size=20, bg="white")
         self.canvas.pack()
+        self.controller.set_aspect_ratio(self.canvas.get_aspect_ratio())
 
         self.menu_frame = tk.LabelFrame(self.main_frame, text="Menu", width=200, bg="lightgray", relief="groove", borderwidth=2, font=("Arial", 14, "bold"))
         self.menu_frame.pack(side=tk.LEFT, fill=tk.Y, padx=10, pady=10)
@@ -73,7 +75,7 @@ class View(BaseUIComponent):
     def create_objects_list_section(self):
         self.objects_frame = tk.LabelFrame(self.menu_frame, text="Objects", width=200, bg="lightgray", relief="groove", borderwidth=2, font=("Arial", 14, "bold"))
         self.objects_frame.pack(side=tk.TOP, padx=5, pady=5)
-        self.objects_listbox = tk.Listbox(self.objects_frame, selectmode=tk.MULTIPLE)
+        self.objects_listbox = tk.Listbox(self.objects_frame, selectmode=tk.SINGLE)
         self.objects_listbox.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
         self.update_objects_list()
 
@@ -137,9 +139,15 @@ class View(BaseUIComponent):
         self.objects_remove_button.grid(row=1, column=1, padx=5, pady=5)
     
     def remove_objects(self):
-        indexes = self.objects_listbox.curselection()
-        self.log_message(f"Removendo os elementos {indexes}")
-        self.controller.remove_objects(indexes)
+        index = self.objects_listbox.curselection()
+        if len(index):
+            index = index[0]
+            element = self.objects_listbox.get(0, tk.END)[index]
+            self.log_message(f"Removing element called {element}")
+        else:
+            self.log_message("No element was selected")
+            return
+        self.controller.remove_objects(index)
         self.draw_canvas()
         self.update_objects_list()
     
@@ -215,7 +223,7 @@ class View(BaseUIComponent):
             self.draw_canvas()
 
     def draw_canvas(self):
-        self.canvas.delete("all")
+        self.canvas.setup()
         for o in self.controller.display_file.objects:
             o = self.controller.viewport.transform(o)
             o.draw(self.canvas)
