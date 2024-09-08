@@ -145,7 +145,7 @@ class WindowToApplyTransformations(AttachedWindow):
         try:
             angle = float(self.angle_relative_to_origin_entry.get())
         except:
-            pass
+            self.add_to_history("Failed to rotate relative to origin")
         else:
             self.add_to_history(f"Rotate {angle}º relative to origin")
             self.controller.rotate_relative_to_origin(angle)
@@ -157,7 +157,7 @@ class WindowToApplyTransformations(AttachedWindow):
         try:
             angle = float(self.angle_relative_to_center_of_object_entry.get())
         except:
-            pass
+            self.add_to_history("Failed to rotate relative to center of object")
         else:
             self.add_to_history(f"Rotate {angle}º relative to center of object")
             self.controller.rotate_relative_to_center_of_object(angle)
@@ -171,7 +171,7 @@ class WindowToApplyTransformations(AttachedWindow):
             x = float(self.x_entry.get())
             y = float(self.y_entry.get())
         except:
-            pass
+            self.add_to_history("Failed to rotate relative to point")
         else:
             self.add_to_history(f"Rotate {angle}º relative to point {(x, y)}")
             self.controller.rotate_relative_to_point(angle, (x, y))
@@ -190,7 +190,7 @@ class WindowToApplyTransformations(AttachedWindow):
             dx = float(self.dx_entry.get())
             dy = float(self.dy_entry.get())
         except:
-            pass
+            self.add_to_history("Failed to translate")
         else:
             self.add_to_history(f"Translate {(dx, dy)}")
             self.controller.translate((dx, dy))
@@ -206,7 +206,7 @@ class WindowToApplyTransformations(AttachedWindow):
             sx = float(self.sx_entry.get())
             sy = float(self.sy_entry.get())
         except:
-            pass
+            self.add_to_history("Failed to scale")
         else:
             self.add_to_history(f"Scale {(sx, sy)}")
             self.controller.scale((sx, sy))
@@ -218,6 +218,10 @@ class WindowToApplyTransformations(AttachedWindow):
             self.sy_entry.insert(0, "")
 
     def apply(self):
-        self.controller.apply()
-        self.view.draw_canvas()
-        self.on_close()
+        try:
+            self.controller.apply()
+            self.view.draw_canvas()
+        except:
+            pass
+        finally:
+            self.on_close()
