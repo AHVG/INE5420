@@ -5,7 +5,11 @@ from datetime import datetime
 from model.viewport import Viewport
 
 from view.base_ui_component import BaseUIComponent
-from view.attached_window import WindowToCreatePoint, WindowToCreateLine, WindowToCreateWireframe
+
+from view.window_to_apply_transformations import WindowToApplyTransformations
+from view.window_to_create_point import WindowToCreatePoint
+from view.window_to_create_line import WindowToCreateLine
+from view.window_to_create_wireframe import WindowToCreateWireframe
 from view.canvas import Canvas
 
 
@@ -61,6 +65,8 @@ class View(BaseUIComponent):
         self.line_create_button.config(command=lambda: WindowToCreateLine(self, self.controller, self.canvas))
         self.wireframe_create_button.config(command=lambda: WindowToCreateWireframe(self, self.controller, self.canvas))
         self.objects_remove_button.config(command=self.remove_objects)
+
+        self.apply_transformation.config(command=lambda: WindowToApplyTransformations(self, self.controller, self.canvas))
     
     def log_message(self, message: str):
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -97,14 +103,14 @@ class View(BaseUIComponent):
         self.zoom_out_button = tk.Button(self.zoom_buttons, text="Zoom Out")
         self.zoom_out_button.grid(row=0, column=1, padx=5, pady=5)
 
-        self.zoom_factor_entry_label = tk.Label(self.zoom_buttons, text="Passo:")
+        self.zoom_factor_entry_label = tk.Label(self.zoom_buttons, bg="lightgray", text="Passo:")
         self.zoom_factor_entry_label.grid(row=0, column=2, padx=5, pady=5)
 
         self.zoom_factor_entry_value = tk.Entry(self.zoom_buttons, width=5)
         self.zoom_factor_entry_value.grid(row=0, column=3, padx=5, pady=5) 
         self.zoom_factor_entry_value.insert(0, "5") 
 
-        self.label_percent = tk.Label(self.zoom_buttons, text="%")
+        self.label_percent = tk.Label(self.zoom_buttons, bg="lightgray", text="%")
         self.label_percent.grid(row=0, column=4, padx=5, pady=5)
 
         self.directions_buttons = tk.Frame(self.nav_frame, bg="lightgray")
@@ -136,7 +142,10 @@ class View(BaseUIComponent):
         self.wireframe_create_button.grid(row=0, column=2, padx=5, pady=5)
     
         self.objects_remove_button = tk.Button(self.manipulation_frame, text="Remove selected object",)
-        self.objects_remove_button.grid(row=1, column=1, padx=5, pady=5)
+        self.objects_remove_button.grid(row=1, column=0, padx=5, pady=5)
+
+        self.apply_transformation = tk.Button(self.manipulation_frame, text="Apply transformation",)
+        self.apply_transformation.grid(row=1, column=1, padx=5, pady=5)
     
     def remove_objects(self):
         index = self.objects_listbox.curselection()

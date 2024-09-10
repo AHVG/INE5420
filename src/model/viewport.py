@@ -14,7 +14,7 @@ class Viewport:
             y_viewport = (1 - (point[1] - window_bounds[2]) / (window_bounds[3] - window_bounds[2])) * (self.bounds[3] - self.bounds[2])
             points.append([x_viewport, y_viewport])
         
-        return drawable.__class__(drawable.name, points)
+        return drawable.__class__(drawable.name, points, drawable.color)
 
     def set_window(self, window):
         self.window = window

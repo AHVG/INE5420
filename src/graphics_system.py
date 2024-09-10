@@ -17,6 +17,7 @@ class GraphicsSystem:
                 -> Janela de criação de ponto
                 -> Janela de criação de linha
                 -> Janela de criação de poligono
+                -> Janela de aplicar transformação
     -> Log
     """
 
