@@ -10,6 +10,7 @@ class WindowToApplyTransformations(AttachedWindow):
             indexes = self.view.objects_listbox.curselection()
             self.controller.setup_transformation(indexes[0])
         except:
+            self.view.log_message("No elements selected")
             self.on_close()
 
     def configure(self):

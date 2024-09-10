@@ -41,18 +41,29 @@ class WindowToCreateLine(AttachedWindow):
         try:
             name = self.name.get()
             color = self.color_entry.get()
-            x1 = float(self.x1_entry.get())
-            y1 = float(self.y1_entry.get())
-            x2 = float(self.x2_entry.get())
-            y2 = float(self.y2_entry.get())
+            x1 = self.x1_entry.get()
+            y1 = self.y1_entry.get()
+            x2 = self.x2_entry.get()
+            y2 = self.y2_entry.get()
+            
+            x1 = float(x1)
+            y1 = float(y1)
+            x2 = float(x2)
+            y2 = float(y2)
             
             hex_pattern = re.compile(r'^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$')
             if not bool(hex_pattern.match(color)):
-                raise TypeError("Valor hexadecimal para cor inválido")
-
+                raise TypeError("Invalid hexadecimal value for color. Expected format #RRGGBB or #RGB")
+            
             self.controller.create_line(name, x1, y1, x2, y2, color)
             self.view.draw_canvas()
             self.view.update_objects_list()
             self.view.log_message(f"Creating Line called {name} and with points {[(x1, y1), (x2, y2)]} of color {color}")
+        except ValueError:
+            self.view.log_message(f"Failed to convert coordinates to float: {[(x1, y1), (x2, y2)]}")
+        except TypeError as te:
+            self.view.log_message(te)
+        except Exception as e:
+            self.view.log_message(f"Unexpected failure: {e}")
         finally:
             self.on_close()

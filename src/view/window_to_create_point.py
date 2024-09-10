@@ -33,16 +33,25 @@ class WindowToCreatePoint(AttachedWindow):
         try:
             name = self.name.get()
             color = self.color_entry.get()
-            x = float(self.x_entry.get())
-            y = float(self.y_entry.get())
+            
+            x = self.x_entry.get()
+            y = self.y_entry.get()
+            x = float(x)
+            y = float(y)
 
             hex_pattern = re.compile(r'^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$')
             if not bool(hex_pattern.match(color)):
-                raise TypeError("Valor hexadecimal para cor inválido")
+                raise TypeError("Invalid hexadecimal value for color. Expected format #RRGGBB or #RGB")
 
             self.controller.create_point(name, x, y, color)
             self.view.draw_canvas()
             self.view.update_objects_list()
             self.view.log_message(f"Creating Point called {name} at point {(x, y)}")
+        except ValueError:
+            self.view.log_message(f"Failed to convert coordinates to float: {(x, y)}")
+        except TypeError as te:
+            self.view.log_message(te)
+        except Exception as e:
+            self.view.log_message(f"Unexpected failure: {e}")
         finally:
             self.on_close()

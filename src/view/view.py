@@ -103,14 +103,14 @@ class View(BaseUIComponent):
         self.zoom_out_button = tk.Button(self.zoom_buttons, text="Zoom Out")
         self.zoom_out_button.grid(row=0, column=1, padx=5, pady=5)
 
-        self.zoom_factor_entry_label = tk.Label(self.zoom_buttons, text="Passo:")
+        self.zoom_factor_entry_label = tk.Label(self.zoom_buttons, bg="lightgray", text="Passo:")
         self.zoom_factor_entry_label.grid(row=0, column=2, padx=5, pady=5)
 
         self.zoom_factor_entry_value = tk.Entry(self.zoom_buttons, width=5)
         self.zoom_factor_entry_value.grid(row=0, column=3, padx=5, pady=5) 
         self.zoom_factor_entry_value.insert(0, "5") 
 
-        self.label_percent = tk.Label(self.zoom_buttons, text="%")
+        self.label_percent = tk.Label(self.zoom_buttons, bg="lightgray", text="%")
         self.label_percent.grid(row=0, column=4, padx=5, pady=5)
 
         self.directions_buttons = tk.Frame(self.nav_frame, bg="lightgray")

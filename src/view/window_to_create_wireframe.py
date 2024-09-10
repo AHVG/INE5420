@@ -31,15 +31,22 @@ class WindowToCreateWireframe(AttachedWindow):
         try:
             name = self.name.get()
             color = self.color_entry.get()
-            points = list(literal_eval(self.points_entry.get()))
+            points = self.points_entry.get()
+            points = list(literal_eval(points))
 
             hex_pattern = re.compile(r'^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$')
             if not bool(hex_pattern.match(color)):
-                raise TypeError("Valor hexadecimal para cor inválido")
+                raise TypeError("Invalid hexadecimal value for color. Expected format #RRGGBB or #RGB")
             
             self.controller.create_wireframe(name, points, color)
             self.view.draw_canvas()
             self.view.update_objects_list()
             self.view.log_message(f"Creating Wireframe called {name} and with points {points}")
+        except ValueError:
+            self.view.log_message(f"Failed to convert coordinates to float: {points}")
+        except TypeError as te:
+            self.view.log_message(te)
+        except Exception as e:
+            self.view.log_message(f"Unexpected failure: {e}")
         finally:
             self.on_close()
