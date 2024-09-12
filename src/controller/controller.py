@@ -15,6 +15,12 @@ class Controller:
         self.display_file = DisplayFile()
         self.transformation = None
 
+    def rotate_left(self, angle):
+        ...
+    
+    def rotate_right(self, angle):
+        ...
+
     def zoom_out(self, factor):
         self.window.zoom_out(factor)
 

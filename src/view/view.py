@@ -60,7 +60,10 @@ class View(BaseUIComponent):
         self.left_button.config(command=self.move_left)
         self.right_button.config(command=self.move_right)
         self.down_button.config(command=self.move_down)
-        
+
+        self.rotate_left_button.config(command=self.rotate_left)
+        self.rotate_right_button.config(command=self.rotate_right)
+
         self.point_create_button.config(command=lambda: WindowToCreatePoint(self, self.controller, self.canvas))
         self.line_create_button.config(command=lambda: WindowToCreateLine(self, self.controller, self.canvas))
         self.wireframe_create_button.config(command=lambda: WindowToCreateWireframe(self, self.controller, self.canvas))
@@ -103,7 +106,7 @@ class View(BaseUIComponent):
         self.zoom_out_button = tk.Button(self.zoom_buttons, text="Zoom Out")
         self.zoom_out_button.grid(row=0, column=1, padx=5, pady=5)
 
-        self.zoom_factor_entry_label = tk.Label(self.zoom_buttons, bg="lightgray", text="Passo:")
+        self.zoom_factor_entry_label = tk.Label(self.zoom_buttons, bg="lightgray", text="Step:")
         self.zoom_factor_entry_label.grid(row=0, column=2, padx=5, pady=5)
 
         self.zoom_factor_entry_value = tk.Entry(self.zoom_buttons, width=5)
@@ -127,6 +130,24 @@ class View(BaseUIComponent):
 
         self.down_button = tk.Button(self.directions_buttons, text="Down", width=7)
         self.down_button.grid(row=2, column=1, padx=5, pady=5)
+
+        self.window_rotation_buttons = tk.Frame(self.nav_frame, bg="lightgray")
+        self.window_rotation_buttons.grid(row=4, column=0, padx=10, pady=10)
+
+        self.rotate_left_button = tk.Button(self.window_rotation_buttons, text="Rotate Left")
+        self.rotate_left_button.grid(row=0, column=0, padx=5, pady=10)
+
+        self.rotate_right_button = tk.Button(self.window_rotation_buttons, text="Rotate Right")
+        self.rotate_right_button.grid(row=0, column=1, padx=5, pady=10)
+
+        self.rotation_angle = tk.Label(self.window_rotation_buttons, bg="lightgray", text="Angle:")
+        self.rotation_angle.grid(row=0, column=3, padx=5, pady=5)
+
+        self.rotation_angle_entry_value = tk.Entry(self.window_rotation_buttons, width=5)
+        self.rotation_angle_entry_value.grid(row=0, column=4, padx=5, pady=5) 
+
+        self.label_degree = tk.Label(self.window_rotation_buttons, bg="lightgray", text="°")
+        self.label_degree.grid(row=0, column=5, padx=5, pady=5)
 
     def create_manipulation_section(self):
         self.manipulation_frame = tk.LabelFrame(self.window_frame, text="Manipulation", bg="lightgray", relief="groove", borderwidth=2, font=("Arial", 14,))
@@ -230,7 +251,31 @@ class View(BaseUIComponent):
             self.log_message(f"Zoom out using {factor}% zoom factor")
             self.controller.zoom_out(factor)
             self.draw_canvas()
-
+    
+    def rotate_left(self):
+        try:
+            angle = float(self.rotation_angle_entry_value.get())
+        except:
+            self.log_message("Invalid angle, try float values")
+            self.rotation_angle_entry_value.delete(0, tk.END)
+            self.rotation_angle_entry_value.insert(0, "5")
+        else:
+            self.log_message(f"Left rotation using {angle}° angle")
+            self.controller.rotate_left(angle)
+            self.draw_canvas()
+    
+    def rotate_right(self):
+        try:
+            angle = float(self.rotation_angle_entry_value.get())
+        except:
+            self.log_message("Invalid angle, try float values")
+            self.rotation_angle_entry_value.delete(0, tk.END)
+            self.rotation_angle_entry_value.insert(0, "5")
+        else:
+            self.log_message(f"Right rotation using {angle}° angle")
+            self.controller.rotate_right(angle)
+            self.draw_canvas()
+    
     def draw_canvas(self):
         self.canvas.setup()
         for o in self.controller.display_file.objects:
