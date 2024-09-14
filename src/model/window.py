@@ -19,10 +19,13 @@ class Window:
         self.zoom_factor = Window.INITIAL_ZOOM_FACTOR
         self.offset = Window.INITIAL_OFFSET
         self.angle = Window.INITIAL_ANGLE
-    
+
     def get_bounds(self):
         return np.array([self.offset[0] - self.width / 2.0, self.offset[0] + self.width / 2.0, self.offset[1] - self.height / 2.0, self.offset[1] + self.height / 2.0], dtype=np.float64)
 
+    def get_offset(self):
+        return self.offset
+    
     def increase_offset(self, offset):
         self.offset += np.array(offset, dtype=np.float64)
 
@@ -53,7 +56,15 @@ class Window:
         self.increase_offset([-0.01 * self.width, 0.0])
 
     def move_right(self):
-        self.increase_offset([0.01 * self.width, 0.0])
+        mod = 0.01 * self.width
+        x = mod * np.cos(np.radians(self.angle))
+        y = mod * np.sin(np.radians(self.angle))
+        offset = [x,y]
+        print(self.angle, offset)
+        self.increase_offset(offset)
+    
+    def increase_angle(self, angle):
+        self.angle += angle
 
     def set_aspect_ratio(self, aspect_ratio):
         self.initial_width = aspect_ratio[0]
@@ -61,3 +72,4 @@ class Window:
 
         self.width = aspect_ratio[0]
         self.height = aspect_ratio[1]
+    

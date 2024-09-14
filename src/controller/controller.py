@@ -5,7 +5,7 @@ from model.viewport import Viewport
 from model.display_file import DisplayFile
 from model.drawable import Point, Line, Wireframe
 from model.transformation import Transformation2D
-
+from model.obj_file_handler import ObjFileHandler
 
 class Controller:
 
@@ -16,10 +16,10 @@ class Controller:
         self.transformation = None
 
     def rotate_left(self, angle):
-        ...
+        self.window.increase_angle(-angle)
     
     def rotate_right(self, angle):
-        ...
+        self.window.increase_angle(angle)
 
     def zoom_out(self, factor):
         self.window.zoom_out(factor)
@@ -77,3 +77,6 @@ class Controller:
     def apply(self):
         self.transformation.apply()
         self.transformation = None
+    
+    def export_world(self):
+        ObjFileHandler.export_file(self.display_file.objects)

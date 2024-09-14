@@ -30,13 +30,14 @@ class View(BaseUIComponent):
 
         self.canvas_frame = tk.LabelFrame(self.main_frame, text="Viewport", width=200, bg="lightgray", relief="groove", borderwidth=2, font=("Arial", 14, "bold"))
         self.canvas_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=10, pady=10)
-        self.canvas = Canvas(self.canvas_frame, width=800, height=600, margin_size=20, bg="white")
+        self.canvas = Canvas(self.canvas_frame, width=600, height=600, margin_size=20, bg="white")
         self.canvas.pack()
         self.controller.set_aspect_ratio(self.canvas.get_aspect_ratio())
 
         self.menu_frame = tk.LabelFrame(self.main_frame, text="Menu", width=200, bg="lightgray", relief="groove", borderwidth=2, font=("Arial", 14, "bold"))
         self.menu_frame.pack(side=tk.LEFT, fill=tk.Y, padx=10, pady=10)
 
+        self.create_file_section()
         self.create_objects_list_section()
         self.window_frame = tk.LabelFrame(self.menu_frame, text="Window", width=200, bg="lightgray", relief="groove", borderwidth=2, font=("Arial", 14, "bold"))
         self.window_frame.pack(side=tk.TOP, padx=10, pady=10)
@@ -52,7 +53,10 @@ class View(BaseUIComponent):
         self.canvas.bind("<MouseWheel>", self.zoom)  # Windows somente?
         self.canvas.bind("<Button-4>", lambda _: self.zoom_in())  # Linux (scroll up)
         self.canvas.bind("<Button-5>", lambda _: self.zoom_out())  # Linux (scroll down)
-    
+
+        self.import_world_button.config(command=self.import_world)
+        self.export_world_button.config(command=self.export_world)
+
         self.zoom_in_button.config(command=self.zoom_in)
         self.zoom_out_button.config(command=self.zoom_out)
         
@@ -80,6 +84,16 @@ class View(BaseUIComponent):
         current_lines = int(self.transcript_frame.index('end-1c').split('.')[0])
         if current_lines > 50:
             self.transcript_frame.delete(1.0, f"{current_lines - 50}.0")
+
+    def create_file_section(self):
+        self.file_frame = tk.LabelFrame(self.menu_frame, width=200, bg="lightgray", relief="groove", borderwidth=2, font=("Arial", 14,))
+        self.file_frame.pack(side=tk.TOP, padx=5, pady=5)
+
+        self.import_world_button = tk.Button(self.file_frame, text="Import World")
+        self.import_world_button.grid(row=0, column=0, padx=5, pady=5)
+
+        self.export_world_button = tk.Button(self.file_frame, text="Export World")
+        self.export_world_button.grid(row=0, column=1, padx=5, pady=5)
 
     def create_objects_list_section(self):
         self.objects_frame = tk.LabelFrame(self.menu_frame, text="Objects", width=200, bg="lightgray", relief="groove", borderwidth=2, font=("Arial", 14, "bold"))
@@ -275,7 +289,13 @@ class View(BaseUIComponent):
             self.log_message(f"Right rotation using {angle}° angle")
             self.controller.rotate_right(angle)
             self.draw_canvas()
+
+    def import_world(self):
+        self.controller.import_world()
     
+    def export_world(self):
+        self.controller.export_world()
+
     def draw_canvas(self):
         self.canvas.setup()
         for o in self.controller.display_file.objects:
