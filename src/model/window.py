@@ -17,7 +17,7 @@ class Window:
         self.height = self.initial_height
 
         self.zoom_factor = Window.INITIAL_ZOOM_FACTOR
-        self.offset = Window.INITIAL_OFFSET
+        self.offset = np.array(Window.INITIAL_OFFSET, dtype=np.float64)
         self.angle = Window.INITIAL_ANGLE
 
     def get_bounds(self):
