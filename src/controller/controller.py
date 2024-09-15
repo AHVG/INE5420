@@ -84,6 +84,8 @@ class Controller:
     def import_world(self, file_path):
         objects = ObjFileHandler.import_file(file_path)
         self.display_file.clear_objects()
+        self.window.reset()
+        self.window.set_aspect_ratio((self.viewport.width, self.viewport.height))
         for object, points in objects.items():
             drawable = None
             if len(points) == 1:

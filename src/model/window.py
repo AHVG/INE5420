@@ -85,3 +85,13 @@ class Window:
         self.width = aspect_ratio[0]
         self.height = aspect_ratio[1]
     
+    def reset(self):
+        self.initial_width = 200.0
+        self.initial_height = 200.0
+        self.width = self.initial_width
+        self.height = self.initial_height
+
+        self.zoom_factor = Window.INITIAL_ZOOM_FACTOR
+        self.offset = Window.INITIAL_OFFSET
+        self.angle = Window.INITIAL_ANGLE
+    

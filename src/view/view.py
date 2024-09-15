@@ -36,6 +36,8 @@ class View(BaseUIComponent):
 
         self.menu_frame = tk.LabelFrame(self.main_frame, text="Menu", width=200, bg="lightgray", relief="groove", borderwidth=2, font=("Arial", 14, "bold"))
         self.menu_frame.pack(side=tk.LEFT, fill=tk.Y, padx=10, pady=10)
+        
+        self.menu_bar = tk.Menu(self.root)
 
         self.create_file_section()
         self.create_objects_list_section()
@@ -57,9 +59,11 @@ class View(BaseUIComponent):
         self.canvas.bind("<Shift-MouseWheel>", self.rotate)  # Windows
         self.canvas.bind("<Shift-Button-4>", lambda _: self.rotate_right())  # Linux (scroll up com Shift)
         self.canvas.bind("<Shift-Button-5>", lambda _: self.rotate_left())  # Linux (scroll down com Shift)
-
-        self.import_world_button.config(command=self.import_world)
-        self.export_world_button.config(command=self.export_world)
+        
+        self.root.config(menu=self.menu_bar)
+        
+        self.arquivo_menu.add_command(label="Import File", command=self.import_world)
+        self.arquivo_menu.add_command(label="Export File", command=self.export_world)
 
         self.zoom_in_button.config(command=self.zoom_in)
         self.zoom_out_button.config(command=self.zoom_out)
@@ -90,14 +94,9 @@ class View(BaseUIComponent):
             self.transcript_frame.delete(1.0, f"{current_lines - 50}.0")
 
     def create_file_section(self):
-        self.file_frame = tk.LabelFrame(self.menu_frame, width=200, bg="lightgray", relief="groove", borderwidth=2, font=("Arial", 14,))
-        self.file_frame.pack(side=tk.TOP, padx=5, pady=5)
-
-        self.import_world_button = tk.Button(self.file_frame, text="Import World")
-        self.import_world_button.grid(row=0, column=0, padx=5, pady=5)
-
-        self.export_world_button = tk.Button(self.file_frame, text="Export World")
-        self.export_world_button.grid(row=0, column=1, padx=5, pady=5)
+        self.arquivo_menu = tk.Menu(self.menu_bar, tearoff=0)
+        self.menu_bar.add_cascade(label="Arquivo", menu=self.arquivo_menu)
+        self.arquivo_menu.add_separator()
 
     def create_objects_list_section(self):
         self.objects_frame = tk.LabelFrame(self.menu_frame, text="Objects", width=200, bg="lightgray", relief="groove", borderwidth=2, font=("Arial", 14, "bold"))
@@ -308,6 +307,7 @@ class View(BaseUIComponent):
                 self.controller.import_world(file_path)
                 self.log_message(f"Importing world from {file_path}")
                 self.draw_canvas()
+                self.update_objects_list()
             else:
                 self.log_message(f"Invalid file. Select a .obj file")
         
