@@ -18,3 +18,7 @@ class DisplayFile:
 
     def remove_object(self, index):
         self.objects.pop(index)
+    
+    def clear_objects(self):
+        self.objects.clear()
+

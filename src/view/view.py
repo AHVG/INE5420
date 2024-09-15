@@ -302,11 +302,15 @@ class View(BaseUIComponent):
             self.draw_canvas()
 
     def import_world(self):
-        self.controller.import_world()
-    
+        file_path = self.controller.import_world()
+        if file_path:
+            self.log_message(f"Importing world from {file_path}")
+            self.draw_canvas()
+        
     def export_world(self):
-        self.controller.export_world()
-
+        file_path = self.controller.export_world()
+        self.log_message(f"Exporting world to {file_path}")
+    
     def draw_canvas(self):
         self.canvas.setup()
         for o in self.controller.display_file.objects:
