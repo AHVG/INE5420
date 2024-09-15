@@ -50,9 +50,13 @@ class View(BaseUIComponent):
         self.canvas.bind("<Shift-B1-Motion>", self.move)
         self.canvas.bind("<ButtonRelease-1>", self.reset_move)
 
-        self.canvas.bind("<MouseWheel>", self.zoom)  # Windows somente?
+        self.canvas.bind("<MouseWheel>", self.zoom)  # Windows
         self.canvas.bind("<Button-4>", lambda _: self.zoom_in())  # Linux (scroll up)
         self.canvas.bind("<Button-5>", lambda _: self.zoom_out())  # Linux (scroll down)
+
+        self.canvas.bind("<Shift-MouseWheel>", self.rotate)  # Windows
+        self.canvas.bind("<Shift-Button-4>", lambda _: self.rotate_right())  # Linux (scroll up com Shift)
+        self.canvas.bind("<Shift-Button-5>", lambda _: self.rotate_left())  # Linux (scroll down com Shift)
 
         self.import_world_button.config(command=self.import_world)
         self.export_world_button.config(command=self.export_world)
@@ -159,6 +163,7 @@ class View(BaseUIComponent):
 
         self.rotation_angle_entry_value = tk.Entry(self.window_rotation_buttons, width=5)
         self.rotation_angle_entry_value.grid(row=0, column=4, padx=5, pady=5) 
+        self.rotation_angle_entry_value.insert(0, "5")
 
         self.label_degree = tk.Label(self.window_rotation_buttons, bg="lightgray", text="°")
         self.label_degree.grid(row=0, column=5, padx=5, pady=5)
@@ -266,6 +271,12 @@ class View(BaseUIComponent):
             self.controller.zoom_out(factor)
             self.draw_canvas()
     
+    def rotate(self, event):
+        if event.delta > 0:
+            self.rotate_right()
+        elif event.delta < 0:
+            self.rotate_left()
+
     def rotate_left(self):
         try:
             angle = float(self.rotation_angle_entry_value.get())

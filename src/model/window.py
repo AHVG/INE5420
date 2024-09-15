@@ -47,24 +47,36 @@ class Window:
         self.set_zoom(self.zoom_factor + selected_zoom_factor/100)
 
     def move_up(self):
-        self.increase_offset([0.0, 0.01 * self.height])
+        mod = -0.01 * self.height
+        x = mod * np.cos(np.radians(-self.angle - 90))
+        y = mod * np.sin(np.radians(-self.angle - 90))
+        offset = [x,y]
+        self.increase_offset(offset)
 
     def move_down(self):
-        self.increase_offset([0.0, -0.01 * self.height])
+        mod = 0.01 * self.height
+        x = mod * np.cos(np.radians(-self.angle - 90))
+        y = mod * np.sin(np.radians(-self.angle - 90))
+        offset = [x,y]
+        self.increase_offset(offset)
 
     def move_left(self):
-        self.increase_offset([-0.01 * self.width, 0.0])
+        mod = -0.01 * self.width
+        x = mod * np.cos(np.radians(-self.angle))
+        y = mod * np.sin(np.radians(-self.angle))
+        offset = [x,y]
+        self.increase_offset(offset)
 
     def move_right(self):
         mod = 0.01 * self.width
-        x = mod * np.cos(np.radians(self.angle))
-        y = mod * np.sin(np.radians(self.angle))
+        x = mod * np.cos(np.radians(-self.angle))
+        y = mod * np.sin(np.radians(-self.angle))
         offset = [x,y]
-        print(self.angle, offset)
         self.increase_offset(offset)
-    
+
     def increase_angle(self, angle):
         self.angle += angle
+        self.angle %= 360
 
     def set_aspect_ratio(self, aspect_ratio):
         self.initial_width = aspect_ratio[0]
