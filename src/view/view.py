@@ -304,9 +304,12 @@ class View(BaseUIComponent):
     def import_world(self):
         file_path = filedialog.askopenfilename()
         if file_path:
-            self.controller.import_world(file_path)
-            self.log_message(f"Importing world from {file_path}")
-            self.draw_canvas()
+            if file_path[-4:] == ".obj":
+                self.controller.import_world(file_path)
+                self.log_message(f"Importing world from {file_path}")
+                self.draw_canvas()
+            else:
+                self.log_message(f"Invalid file. Select a .obj file")
         
     def export_world(self):
         file_path = filedialog.askdirectory()
