@@ -59,6 +59,8 @@ class View(BaseUIComponent):
         self.canvas.bind("<Shift-MouseWheel>", self.rotate)  # Windows
         self.canvas.bind("<Shift-Button-4>", lambda _: self.rotate_right())  # Linux (scroll up com Shift)
         self.canvas.bind("<Shift-Button-5>", lambda _: self.rotate_left())  # Linux (scroll down com Shift)
+
+        self.root.bind("<Delete>", lambda _: self.remove_objects())
         
         self.root.config(menu=self.menu_bar)
         
@@ -95,7 +97,7 @@ class View(BaseUIComponent):
 
     def create_file_section(self):
         self.arquivo_menu = tk.Menu(self.menu_bar, tearoff=0)
-        self.menu_bar.add_cascade(label="Arquivo", menu=self.arquivo_menu)
+        self.menu_bar.add_cascade(label="File", menu=self.arquivo_menu)
         self.arquivo_menu.add_separator()
 
     def create_objects_list_section(self):
