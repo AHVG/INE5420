@@ -86,12 +86,12 @@ class Controller:
         self.display_file.clear_objects()
         self.window.reset()
         self.window.set_aspect_ratio((self.viewport.width, self.viewport.height))
-        for object, points in objects.items():
+        for object_, points in objects.items():
             drawable = None
             if len(points) == 1:
-                drawable = Point(object, points)
+                drawable = Point(object_, points)
             if len(points) == 2:
-                drawable = Line(object, points)
+                drawable = Line(object_, points)
             if len(points) > 2:
-                drawable = Wireframe(object, points)
+                drawable = Wireframe(object_, points)
             self.display_file.add_object(drawable)
