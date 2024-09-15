@@ -1,5 +1,5 @@
 import tkinter as tk
-
+from tkinter import filedialog
 from datetime import datetime
 
 from model.viewport import Viewport
@@ -302,14 +302,17 @@ class View(BaseUIComponent):
             self.draw_canvas()
 
     def import_world(self):
-        file_path = self.controller.import_world()
+        file_path = filedialog.askopenfilename()
         if file_path:
+            self.controller.import_world(file_path)
             self.log_message(f"Importing world from {file_path}")
             self.draw_canvas()
         
     def export_world(self):
-        file_path = self.controller.export_world()
-        self.log_message(f"Exporting world to {file_path}")
+        file_path = filedialog.askdirectory()
+        if file_path:
+            self.controller.export_world(file_path)
+            self.log_message(f"Exporting world to {file_path}")
     
     def draw_canvas(self):
         self.canvas.setup()

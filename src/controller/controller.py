@@ -78,21 +78,18 @@ class Controller:
         self.transformation.apply()
         self.transformation = None
     
-    def export_world(self):
-        return ObjFileHandler.export_file(self.display_file.objects)
+    def export_world(self, file_path):
+        ObjFileHandler.export_file(self.display_file.objects, file_path)
     
-    def import_world(self):
-        file_path, objects = ObjFileHandler.import_file()
-        if file_path:
-            self.display_file.clear_objects()
-            for object, points in objects.items():
-                drawable = None
-                if len(points) == 1:
-                    drawable = Point(object, points)
-                if len(points) == 2:
-                    drawable = Line(object, points)
-                if len(points) > 2:
-                    drawable = Wireframe(object, points)
-                self.display_file.add_object(drawable)
-            return file_path
-        return None
+    def import_world(self, file_path):
+        objects = ObjFileHandler.import_file(file_path)
+        self.display_file.clear_objects()
+        for object, points in objects.items():
+            drawable = None
+            if len(points) == 1:
+                drawable = Point(object, points)
+            if len(points) == 2:
+                drawable = Line(object, points)
+            if len(points) > 2:
+                drawable = Wireframe(object, points)
+            self.display_file.add_object(drawable)
