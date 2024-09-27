@@ -39,7 +39,7 @@ class View(BaseUIComponent):
         
         self.menu_bar = tk.Menu(self.root)
 
-        self.create_file_section()
+        #self.create_file_section()
         self.create_objects_list_section()
         self.window_frame = tk.LabelFrame(self.menu_frame, text="Window", width=200, bg="lightgray", relief="groove", borderwidth=2, font=("Arial", 14, "bold"))
         self.window_frame.pack(side=tk.TOP, padx=10, pady=10)
@@ -64,8 +64,8 @@ class View(BaseUIComponent):
         
         self.root.config(menu=self.menu_bar)
         
-        self.arquivo_menu.add_command(label="Import File", command=self.import_world)
-        self.arquivo_menu.add_command(label="Export File", command=self.export_world)
+        #self.arquivo_menu.add_command(label="Import File", command=self.import_world)
+        #self.arquivo_menu.add_command(label="Export File", command=self.export_world)
 
         self.zoom_in_button.config(command=self.zoom_in)
         self.zoom_out_button.config(command=self.zoom_out)
@@ -102,7 +102,7 @@ class View(BaseUIComponent):
 
     def create_objects_list_section(self):
         self.objects_frame = tk.LabelFrame(self.menu_frame, text="Objects", width=200, bg="lightgray", relief="groove", borderwidth=2, font=("Arial", 14, "bold"))
-        self.objects_frame.pack(side=tk.TOP, padx=5, pady=5)
+        self.objects_frame.pack(side=tk.LEFT, padx=5, pady=5)
         self.objects_listbox = tk.Listbox(self.objects_frame, selectmode=tk.SINGLE)
         self.objects_listbox.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
         self.update_objects_list()
