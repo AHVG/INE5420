@@ -5,7 +5,7 @@ from model.viewport import Viewport
 from model.display_file import DisplayFile
 from model.drawable import Point, Line, Wireframe
 from model.transformation import Transformation2D
-
+from model.obj_file_handler import ObjFileHandler
 
 class Controller:
 
@@ -14,6 +14,12 @@ class Controller:
         self.viewport = Viewport(self.window)
         self.display_file = DisplayFile()
         self.transformation = None
+
+    def rotate_left(self, angle):
+        self.window.increase_angle(-angle)
+    
+    def rotate_right(self, angle):
+        self.window.increase_angle(angle)
 
     def zoom_out(self, factor):
         self.window.zoom_out(factor)
@@ -71,3 +77,21 @@ class Controller:
     def apply(self):
         self.transformation.apply()
         self.transformation = None
+    
+    def export_world(self, file_path):
+        ObjFileHandler.export_file(self.display_file.objects, file_path)
+    
+    def import_world(self, file_path):
+        objects = ObjFileHandler.import_file(file_path)
+        self.display_file.clear_objects()
+        self.window.reset()
+        self.window.set_aspect_ratio((self.viewport.width, self.viewport.height))
+        for object_, points in objects.items():
+            drawable = None
+            if len(points) == 1:
+                drawable = Point(object_, points)
+            if len(points) == 2:
+                drawable = Line(object_, points)
+            if len(points) > 2:
+                drawable = Wireframe(object_, points)
+            self.display_file.add_object(drawable)
