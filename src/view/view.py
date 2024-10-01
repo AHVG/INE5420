@@ -44,6 +44,7 @@ class View(BaseUIComponent):
         self.window_frame = tk.LabelFrame(self.menu_frame, text="Window", width=200, bg="lightgray", relief="groove", borderwidth=2, font=("Arial", 14, "bold"))
         self.window_frame.pack(side=tk.TOP, padx=10, pady=10)
         self.create_navigation_section()
+        self.create_clipping_section()
         self.create_manipulation_section()
 
         self.draw_canvas()
@@ -69,6 +70,9 @@ class View(BaseUIComponent):
 
         self.zoom_in_button.config(command=self.zoom_in)
         self.zoom_out_button.config(command=self.zoom_out)
+
+        self.radio_button.config(command=self.toggle_line_clipping_method)
+        self.radio_button_entry_value.config(state='readonly')
         
         self.up_button.config(command=self.move_up)
         self.left_button.config(command=self.move_left)
@@ -99,6 +103,15 @@ class View(BaseUIComponent):
         self.arquivo_menu = tk.Menu(self.menu_bar, tearoff=0)
         self.menu_bar.add_cascade(label="File", menu=self.arquivo_menu)
         self.arquivo_menu.add_separator()
+    
+    def create_clipping_section(self):
+        self.clipping_frame = tk.Frame(self.window_frame, bg="lightgray")
+        self.clipping_frame.pack(side=tk.BOTTOM, padx=10, pady=10)
+        self.radio_button = tk.Button(self.clipping_frame, text="radio")
+        self.radio_button.grid(row=0, column= 0, padx=10, pady=10)
+        self.radio_button_entry_value = tk.Entry(self.clipping_frame, width=7)
+        self.radio_button_entry_value.grid(row=0,column = 1, padx=5, pady=5) 
+        self.radio_button_entry_value.insert(0, 'method1')
 
     def create_objects_list_section(self):
         self.objects_frame = tk.LabelFrame(self.menu_frame, text="Objects", width=200, bg="lightgray", relief="groove", borderwidth=2, font=("Arial", 14, "bold"))
@@ -318,6 +331,19 @@ class View(BaseUIComponent):
         if file_path:
             self.controller.export_world(file_path)
             self.log_message(f"Exporting world to {file_path}")
+
+    def toggle_line_clipping_method(self):
+        self.radio_button_entry_value.config(state='normal')
+        method = self.radio_button_entry_value.get()
+        self.radio_button_entry_value.delete(0, tk.END)
+
+        if method== 'method1':
+            self.radio_button_entry_value.insert(0, "method2")
+        else:
+            self.radio_button_entry_value.insert(0, "method1")
+        
+        self.radio_button_entry_value.config(state='readonly')
+        self.controller.set_line_clipping_method(method)
     
     def draw_canvas(self):
         self.canvas.setup()

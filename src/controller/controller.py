@@ -95,3 +95,6 @@ class Controller:
             if len(points) > 2:
                 drawable = Wireframe(object_, points)
             self.display_file.add_object(drawable)
+
+    def set_line_clipping_method(self, method):
+        ...
