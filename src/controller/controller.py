@@ -84,17 +84,10 @@ class Controller:
     def import_world(self, file_path):
         objects = ObjFileHandler.import_file(file_path)
         self.display_file.clear_objects()
+        for o in objects:
+            self.display_file.add_object(o)
         self.window.reset()
         self.window.set_aspect_ratio((self.viewport.width, self.viewport.height))
-        for object_, points in objects.items():
-            drawable = None
-            if len(points) == 1:
-                drawable = Point(object_, points)
-            if len(points) == 2:
-                drawable = Line(object_, points)
-            if len(points) > 2:
-                drawable = Wireframe(object_, points)
-            self.display_file.add_object(drawable)
 
     def set_line_clipping_method(self, method):
         for object_ in self.display_file.objects:

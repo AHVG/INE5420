@@ -316,15 +316,14 @@ class View(BaseUIComponent):
             self.draw_canvas()
 
     def import_world(self):
-        file_path = filedialog.askopenfilename()
+        file_path = filedialog.askopenfilename(filetypes=[("OBJ Files", "*.obj")])
         if file_path:
-            if file_path[-4:] == ".obj":
-                self.controller.import_world(file_path)
-                self.log_message(f"Importing world from {file_path}")
-                self.draw_canvas()
-                self.update_objects_list()
-            else:
-                self.log_message(f"Invalid file. Select a .obj file")
+            path_without_extension = file_path[:-4]
+            self.controller.import_world(path_without_extension)
+            
+            self.log_message(f"Importing world from {file_path}")
+            self.draw_canvas()
+            self.update_objects_list()
 
     def export_world(self):
         default_filename = "world"

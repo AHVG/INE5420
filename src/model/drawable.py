@@ -5,6 +5,16 @@ from model.clipping import PointClipping
 from model.clipping import LineClipping
 from model.clipping import WireframeClipping
 
+class Exportable:
+    def export_to_file(self, offset):
+        pass
+
+
+class Importable:
+    def import_from_file(self):
+        pass
+
+
 class Drawable(Exportable, Importable):
 
     def __init__(self, kind, name, points, color="#000000"):
@@ -44,8 +54,8 @@ class Drawable(Exportable, Importable):
             vertices += f"v {point[0]} {point[1]} 0.0\n"
 
         obj += f"o {self.name}\n"
-        obj += f"{type_to_char[self.kind]} " + " ".join(str(i + offset) for i in range(1, len(self.points) + 1)) + "\n"
         obj += f"usemtl {self.name}\n"
+        obj += f"{type_to_char[self.kind]} " + " ".join(str(i + offset) for i in range(1, len(self.points) + 1)) + "\n"
 
         return vertices, obj, mtl, offset + len(self.points)
 
