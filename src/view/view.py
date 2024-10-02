@@ -1,8 +1,8 @@
+import os
 import tkinter as tk
+
 from tkinter import filedialog
 from datetime import datetime
-
-from model.viewport import Viewport
 
 from view.base_ui_component import BaseUIComponent
 
@@ -325,12 +325,20 @@ class View(BaseUIComponent):
                 self.update_objects_list()
             else:
                 self.log_message(f"Invalid file. Select a .obj file")
-        
+
     def export_world(self):
-        file_path = filedialog.askdirectory()
+        default_filename = "world"
+        file_path = filedialog.asksaveasfilename(
+            initialfile=default_filename,
+            title="Salvar Mundo Como",
+            defaultextension="",
+            filetypes=[("OBJ and MTL files", "*.obj;*.mtl"),]
+        )
+
         if file_path:
-            self.controller.export_world(file_path)
-            self.log_message(f"Exporting world to {file_path}")
+            base_path = os.path.splitext(file_path)[0]
+            self.controller.export_world(base_path)
+            self.log_message(f"Exporting world to {base_path}")
 
     def toggle_line_clipping_method(self):
         self.radio_button_entry_value.config(state='normal')

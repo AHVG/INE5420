@@ -27,20 +27,20 @@ class Drawable(Exportable, Importable):
         type_to_char = {
             "point": "p",
             "line": "l",
-            "wireframe": "f"
+            "wireframe": "l",
+            "solid wireframe": "f"
         }
         vertices = ""
         obj = ""
         mtl = ""
 
         color = self._convert_color_to_rgb()
-        print(color)
         mtl += f"newmtl {self.name}\n"
         mtl += f"Kd {color[0]} {color[1]} {color[2]}\n"
 
         for point in self.points:
             vertices += f"v {point[0]} {point[1]} 0.0\n"
-        
+
         obj += f"o {self.name}\n"
         obj += f"{type_to_char[self.kind]} " + " ".join(str(i + offset) for i in range(1, len(self.points) + 1)) + "\n"
         obj += f"usemtl {self.name}\n"
@@ -76,7 +76,7 @@ class Wireframe(Drawable):
 
     def __init__(self, name, points, color="#000000", is_solid=False):
         assert len(points) >= 3, "Número de pontos precisa ser > 3 para criar um Wireframe"
-        super().__init__("wireframe", name, points, color)
+        super().__init__("solid wireframe" if is_solid else "wireframe", name, points, color)
         self.is_solid = is_solid
 
     def draw(self, canvas):
