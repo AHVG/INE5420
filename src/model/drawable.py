@@ -1,7 +1,9 @@
 import numpy as np
 
 from model.obj_file_handler import Exportable, Importable
-
+from model.clipping import PointClipping
+from model.clipping import LineClipping
+from model.clipping import WireframeClipping
 
 class Drawable(Exportable, Importable):
 
@@ -50,6 +52,9 @@ class Drawable(Exportable, Importable):
     def draw(self, canvas):
         pass
 
+    def clip(self, window_clip):
+        pass
+
 
 class Point(Drawable):
 
@@ -61,16 +66,24 @@ class Point(Drawable):
         x, y = self.points[0]
         canvas.create_oval(x-2, y-2, x+2, y+2, fill=self.color, outline=self.color)
 
-
+    def clip(self, window_clip):
+        return PointClipping(window_clip).clip(self)
+    
 class Line(Drawable):
 
-    def __init__(self, name, points, color="#000000"):
+    def __init__(self, name, points, color="#000000", clip_method='liang-barsky'):
         assert len(points) == 2, "Número de pontos precisa ser = 2 para criar uma Line"
         super().__init__("line", name, points, color)
+        self.clip_method = clip_method
 
     def draw(self, canvas):
         canvas.create_line(*self.points[0], *self.points[1], fill=self.color, width=2)
 
+    def clip(self, window_clip):
+        return LineClipping(window_clip).clip(self)
+
+    def set_clip_method(self, method):
+        self.clip_method = method
 
 class Wireframe(Drawable):
 
@@ -87,3 +100,6 @@ class Wireframe(Drawable):
                 x1, y1 = point
                 x2, y2 = self.points[(i + 1) % len(self.points)]
                 canvas.create_line(x1, y1, x2, y2, fill=self.color, width=2)
+    
+    def clip(self, window_clip):
+        return WireframeClipping(window_clip).clip(self)

@@ -97,4 +97,6 @@ class Controller:
             self.display_file.add_object(drawable)
 
     def set_line_clipping_method(self, method):
-        ...
+        for object_ in self.display_file.objects:
+            if isinstance(object_, Line):
+                object_.set_clip_method(method)

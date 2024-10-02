@@ -109,9 +109,9 @@ class View(BaseUIComponent):
         self.clipping_frame.pack(side=tk.BOTTOM, padx=10, pady=10)
         self.radio_button = tk.Button(self.clipping_frame, text="radio")
         self.radio_button.grid(row=0, column= 0, padx=10, pady=10)
-        self.radio_button_entry_value = tk.Entry(self.clipping_frame, width=7)
-        self.radio_button_entry_value.grid(row=0,column = 1, padx=5, pady=5) 
-        self.radio_button_entry_value.insert(0, 'method1')
+        self.radio_button_entry_value = tk.Entry(self.clipping_frame, width=15)
+        self.radio_button_entry_value.grid(row=0, column = 1, padx=5, pady=5) 
+        self.radio_button_entry_value.insert(0, 'liang-barsky')
 
     def create_objects_list_section(self):
         self.objects_frame = tk.LabelFrame(self.menu_frame, text="Objects", width=200, bg="lightgray", relief="groove", borderwidth=2, font=("Arial", 14, "bold"))
@@ -345,17 +345,20 @@ class View(BaseUIComponent):
         method = self.radio_button_entry_value.get()
         self.radio_button_entry_value.delete(0, tk.END)
 
-        if method== 'method1':
-            self.radio_button_entry_value.insert(0, "method2")
+        if method == 'liang-barsky':
+            self.radio_button_entry_value.insert(0, 'nicholl-lee-nicholl')
         else:
-            self.radio_button_entry_value.insert(0, "method1")
+            self.radio_button_entry_value.insert(0, 'liang-barsky')
         
         self.radio_button_entry_value.config(state='readonly')
-        self.controller.set_line_clipping_method(method)
+        self.controller.set_line_clipping_method(self.radio_button_entry_value.get())
     
     def draw_canvas(self):
         self.canvas.setup()
         for o in self.controller.display_file.objects:
             o = self.controller.viewport.transform(o)
-            o.draw(self.canvas)
+            try:
+                o.draw(self.canvas)
+            except:
+                pass
         self.canvas.debug()
