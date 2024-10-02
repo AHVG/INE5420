@@ -1,6 +1,5 @@
 import numpy as np
 
-from model.obj_file_handler import Exportable, Importable
 from model.clipping import PointClipping
 from model.clipping import LineClipping
 from model.clipping import WireframeClipping
