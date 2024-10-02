@@ -21,8 +21,18 @@ class WindowToCreateWireframe(AttachedWindow):
         self.points_entry = tk.Entry(self)
         self.points_entry.grid(row=2, column=1)
 
+        tk.Label(self, text="Wireframe Type:").grid(row=3, column=0)
+
+        self.wireframe_type = tk.StringVar(value="solid")
+
+        self.solid_radio = tk.Radiobutton(self, text="Solid", variable=self.wireframe_type, value="solid")
+        self.solid_radio.grid(row=3, column=1, sticky="w")
+
+        self.grade_radio = tk.Radiobutton(self, text="Grade", variable=self.wireframe_type, value="grade")
+        self.grade_radio.grid(row=3, column=2, sticky="w")
+
         self.create_button = tk.Button(self, text="Create")
-        self.create_button.grid(row=3, column=0, columnspan=2, pady=5)
+        self.create_button.grid(row=4, column=0, columnspan=2, pady=5)
     
     def register_events(self):
         self.create_button.configure(command=self.create_wireframe_from_dialog)
@@ -33,12 +43,13 @@ class WindowToCreateWireframe(AttachedWindow):
             color = self.color_entry.get()
             points = self.points_entry.get()
             points = list(literal_eval(points))
+            is_solid = True if self.wireframe_type.get() == "solid" else False
 
             hex_pattern = re.compile(r'^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$')
             if not bool(hex_pattern.match(color)):
                 raise TypeError("Invalid hexadecimal value for color. Expected format #RRGGBB or #RGB")
             
-            self.controller.create_wireframe(name, points, color)
+            self.controller.create_wireframe(name, points, color, is_solid)
             self.view.draw_canvas()
             self.view.update_objects_list()
             self.view.log_message(f"Creating Wireframe called {name} and with points {points}")

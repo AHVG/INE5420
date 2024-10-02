@@ -45,8 +45,8 @@ class Controller:
     def create_line(self, name, x1, y1, x2, y2, color):
         self.display_file.add_object(Line(name, [(x1, y1), (x2, y2)], color))
 
-    def create_wireframe(self, name, points, color):
-        self.display_file.add_object(Wireframe(name, points, color))
+    def create_wireframe(self, name, points, color, is_solid):
+        self.display_file.add_object(Wireframe(name, points, color, is_solid))
 
     def remove_objects(self, indexes):
         self.display_file.remove_object(indexes)

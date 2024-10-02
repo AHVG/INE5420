@@ -9,6 +9,12 @@ class Drawable:
         self.points = np.array(points, dtype=np.float64)
         self.color = color
 
+    def copy(self, **kwargs):
+        drawable_dict = self.__dict__.copy()
+        drawable_dict.pop("kind")
+        drawable_dict.update(kwargs)
+        return self.__class__(**drawable_dict)
+
     def draw(self, canvas):
         pass
 
@@ -36,12 +42,16 @@ class Line(Drawable):
 
 class Wireframe(Drawable):
 
-    def __init__(self, name, points, color="#000000"):
+    def __init__(self, name, points, color="#000000", is_solid=False):
         assert len(points) >= 3, "Número de pontos precisa ser > 3 para criar um Wireframe"
         super().__init__("wireframe", name, points, color)
+        self.is_solid = is_solid
 
     def draw(self, canvas):
-        for i, point in enumerate(self.points):
-            x1, y1 = point
-            x2, y2 = self.points[(i + 1) % len(self.points)]
-            canvas.create_line(x1, y1, x2, y2, fill=self.color, width=2)
+        if self.is_solid:
+            canvas.create_polygon(self.points.flatten().tolist(), fill=self.color, outline=self.color)            
+        else:
+            for i, point in enumerate(self.points):
+                x1, y1 = point
+                x2, y2 = self.points[(i + 1) % len(self.points)]
+                canvas.create_line(x1, y1, x2, y2, fill=self.color, width=2)
