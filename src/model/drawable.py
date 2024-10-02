@@ -1,7 +1,9 @@
 import numpy as np
 
+from model.obj_file_handler import Exportable, Importable
 
-class Drawable:
+
+class Drawable(Exportable, Importable):
 
     def __init__(self, kind, name, points, color="#000000"):
         self.kind = kind
@@ -14,6 +16,36 @@ class Drawable:
         drawable_dict.pop("kind")
         drawable_dict.update(kwargs)
         return self.__class__(**drawable_dict)
+    
+    def _convert_color_to_rgb(self):
+        if len(self.color) == 7:
+            return tuple(int(self.color[i + 1:i + 3], 16) / 255 for i in (0, 2, 4))
+        
+        return tuple(int(self.color[i + 1] + self.color[i + 1], 16) / 255 for i in (0, 1, 2))
+
+    def export_to_file(self, offset):
+        type_to_char = {
+            "point": "p",
+            "line": "l",
+            "wireframe": "f"
+        }
+        vertices = ""
+        obj = ""
+        mtl = ""
+
+        color = self._convert_color_to_rgb()
+        print(color)
+        mtl += f"newmtl {self.name}\n"
+        mtl += f"Kd {color[0]} {color[1]} {color[2]}\n"
+
+        for point in self.points:
+            vertices += f"v {point[0]} {point[1]} 0.0\n"
+        
+        obj += f"o {self.name}\n"
+        obj += f"{type_to_char[self.kind]} " + " ".join(str(i + offset) for i in range(1, len(self.points) + 1)) + "\n"
+        obj += f"usemtl {self.name}\n"
+
+        return vertices, obj, mtl, offset + len(self.points)
 
     def draw(self, canvas):
         pass

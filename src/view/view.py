@@ -65,8 +65,8 @@ class View(BaseUIComponent):
         
         self.root.config(menu=self.menu_bar)
         
-        #self.arquivo_menu.add_command(label="Import File", command=self.import_world)
-        #self.arquivo_menu.add_command(label="Export File", command=self.export_world)
+        self.menu_bar.add_command(label="Import File", command=self.import_world)
+        self.menu_bar.add_command(label="Export File", command=self.export_world)
 
         self.zoom_in_button.config(command=self.zoom_in)
         self.zoom_out_button.config(command=self.zoom_out)
@@ -350,3 +350,4 @@ class View(BaseUIComponent):
         for o in self.controller.display_file.objects:
             o = self.controller.viewport.transform(o)
             o.draw(self.canvas)
+        self.canvas.debug()
