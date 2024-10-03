@@ -58,16 +58,19 @@ class Transformation2D(Transformation):
         return self
 
     def escalation(self, factor):
+        center = self.get_center(self.drawable)
+        return self.escalation_relative_to_a_point(center)
+    
+    def escalation_relative_to_a_point(self, factor, point):
         escalation_matrix = np.matrix([
             [factor[0], 0, 0],
             [0, factor[1], 0],
             [0, 0, 1]
         ], dtype=np.float64)
-        center = self.get_center(self.drawable)
 
-        self.translation(-center)
+        self.translation(-point)
         self.matrix = self.matrix @ escalation_matrix
-        self.translation(center)
+        self.translation(point)
 
         return self
     

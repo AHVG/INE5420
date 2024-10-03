@@ -45,8 +45,8 @@ class Controller:
     def create_line(self, name, x1, y1, x2, y2, color):
         self.display_file.add_object(Line(name, [(x1, y1), (x2, y2)], color))
 
-    def create_wireframe(self, name, points, color):
-        self.display_file.add_object(Wireframe(name, points, color))
+    def create_wireframe(self, name, points, color, is_solid):
+        self.display_file.add_object(Wireframe(name, points, color, is_solid))
 
     def remove_objects(self, indexes):
         self.display_file.remove_object(indexes)
@@ -84,14 +84,12 @@ class Controller:
     def import_world(self, file_path):
         objects = ObjFileHandler.import_file(file_path)
         self.display_file.clear_objects()
+        for o in objects:
+            self.display_file.add_object(o)
         self.window.reset()
         self.window.set_aspect_ratio((self.viewport.width, self.viewport.height))
-        for object_, points in objects.items():
-            drawable = None
-            if len(points) == 1:
-                drawable = Point(object_, points)
-            if len(points) == 2:
-                drawable = Line(object_, points)
-            if len(points) > 2:
-                drawable = Wireframe(object_, points)
-            self.display_file.add_object(drawable)
+
+    def set_line_clipping_method(self, method):
+        for object_ in self.display_file.objects:
+            if isinstance(object_, Line):
+                object_.set_clip_method(method)

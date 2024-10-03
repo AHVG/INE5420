@@ -21,7 +21,7 @@ class Window:
         self.angle = Window.INITIAL_ANGLE
 
     def get_bounds(self):
-        return np.array([self.offset[0] - self.width / 2.0, self.offset[0] + self.width / 2.0, self.offset[1] - self.height / 2.0, self.offset[1] + self.height / 2.0], dtype=np.float64)
+        return np.array([self.offset[0] - 1, self.offset[0] + 1, self.offset[1] - 1, self.offset[1] + 1], dtype=np.float64)
 
     def get_offset(self):
         return self.offset
