@@ -115,62 +115,42 @@ class Wireframe(Drawable):
 
 
 class Curve2D(Drawable):
-    # MH = np.array([[2.0,  -2.0, 1.0, 1.0],
-    #                [-3.0, 3.0, -2.0, 1.0],
-    #                [0.0, 0.0, 1.0, 0.0],
-    #                [1.0, 0.0, 0.0, 0.0]], dtype=np.float64)
-    
-    # MB = np.array([[-1.0, 3.0, -3.0, 1.0],
-    #                [3.0, -6.0, 3.0, 0.0],
-    #                [-3.0, 3.0, 0.0, 0.0],
-    #                [1.0, 0.0, 0.0, 0.0]], dtype=np.float64)
 
     def __init__(self, name, points, precision=10, color="#000000"):
         assert len(points) > 3 and len(points) % 2 == 0, "Número de pontos precisa ser >= 4 para criar um Cruver2D"
         self.precision = precision
         super().__init__("curve2D", name, points, color)
 
-    def draw(self, canvas):
-        def calculate_points(p1, p2, p3, p4):
-            points = []
-            for t in range(0, 101, step):
-                t /= 100.0
-                x = p1[0] * (-t**3 + 3.0 * t**2 - 3.0 * t + 1) + p2[0] * (3.0 * t**3 - 6.0 * t**2 + 3.0 * t) + p3[0] * (-3.0 * t**3 + 3.0 * t**2) + p4[0] * t**3
-                y = p1[1] * (-t**3 + 3.0 * t**2 - 3.0 * t + 1) + p2[1] * (3.0 * t**3 - 6.0 * t**2 + 3.0 * t) + p3[1] * (-3.0 * t**3 + 3.0 * t**2) + p4[1] * t**3
-                points.append((x, y))
+    def calculate_bezier(self, p1, p2, p3, p4):
+        points = []
+        step = 1
+        for t in range(0, 101, step):
+            t /= 100.0
+            x = p1[0] * (-t**3 + 3.0 * t**2 - 3.0 * t + 1) + p2[0] * (3.0 * t**3 - 6.0 * t**2 + 3.0 * t) + p3[0] * (-3.0 * t**3 + 3.0 * t**2) + p4[0] * t**3
+            y = p1[1] * (-t**3 + 3.0 * t**2 - 3.0 * t + 1) + p2[1] * (3.0 * t**3 - 6.0 * t**2 + 3.0 * t) + p3[1] * (-3.0 * t**3 + 3.0 * t**2) + p4[1] * t**3
+            points.append((x, y))
 
-            return points
-        
+        return points
+    
+    def calculate_points(self):
         step = 1
         points = []
         p1, p2, p3, p4 = self.points[0], self.points[1], self.points[2], self.points[3]
-        points.extend(calculate_points(p1, p2, p3, p4))
-        canvas.create_line(*p1, *p2, fill="red", dash=(5,4), width=2)
-        canvas.create_line(*p4, *p3, fill="red", dash=(5,4), width=2)
-        
-        # p0 -> p1
-        # p1 -> p2
-        # p2 -> p3
-        # p3 -> p4
-        
-        # p3 -> p4 -> current_p1
-        # p4 -> p5 -> current_p2
-        # p5 -> p6 -> current_p3
-        # p6 -> p7 -> current_p4
-        
+        points.extend(self.calculate_bezier(p1, p2, p3, p4))
+
         _, prev_p2, prev_p3, prev_p4 = p1, p2, p3, p4
-        for i in range(4, len(self.points)):
+        for i in range(4, len(self.points), 2):
             current_p1 = prev_p4
             current_p2 = 2 * prev_p4 - prev_p3
             current_p3 = self.points[i]
-            current_p4 = self.points[i]
-            
+            current_p4 = self.points[i + 1]
             _, prev_p2, prev_p3, prev_p4 = current_p1, current_p2, current_p3, current_p4
-            
-            points.extend(calculate_points(current_p1, current_p2, current_p3, current_p4))
-            canvas.create_line(*current_p1, *current_p2, fill="red", dash=(5,4), width=2)
-            canvas.create_line(*current_p4, *current_p3, fill="red", dash=(5,4), width=2)
-    
+            points.extend(self.calculate_bezier(current_p1, current_p2, current_p3, current_p4))
+        
+        return points
+
+    def draw(self, canvas):
+        points = self.calculate_points()
         start = 1
         end = len(points)
         for i, point in enumerate(points[start:end]):
@@ -178,7 +158,5 @@ class Curve2D(Drawable):
             prev_point = points[i - 1]
             canvas.create_line(prev_point[0], prev_point[1], point[0], point[1], fill=self.color, width=2)
 
-        
-    
     def clip(self, window_clip):
         return self
