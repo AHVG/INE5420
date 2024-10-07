@@ -117,13 +117,12 @@ class Wireframe(Drawable):
 class Curve2D(Drawable):
 
     def __init__(self, name, points, precision=10, color="#000000"):
-        assert len(points) > 3 and len(points) % 2 == 0, "Número de pontos precisa ser >= 4 para criar um Cruver2D"
         self.precision = precision
         super().__init__("curve2D", name, points, color)
 
     def calculate_bezier(self, p1, p2, p3, p4):
         points = []
-        step = 1
+        step = 10
         for t in range(0, 101, step):
             t /= 100.0
             x = p1[0] * (-t**3 + 3.0 * t**2 - 3.0 * t + 1) + p2[0] * (3.0 * t**3 - 6.0 * t**2 + 3.0 * t) + p3[0] * (-3.0 * t**3 + 3.0 * t**2) + p4[0] * t**3
@@ -150,13 +149,23 @@ class Curve2D(Drawable):
         return points
 
     def draw(self, canvas):
-        points = self.calculate_points()
         start = 1
-        end = len(points)
-        for i, point in enumerate(points[start:end]):
+        end = len(self.points)
+        for i, point in enumerate(self.points[start:end]):
             i += start
-            prev_point = points[i - 1]
+            prev_point = self.points[i - 1]
             canvas.create_line(prev_point[0], prev_point[1], point[0], point[1], fill=self.color, width=2)
 
     def clip(self, window_clip):
-        return self
+        new_points = []
+        points = self.calculate_points()
+        clipping = LineClipping(window_clip)
+        for i in range(1, len(points)):
+            p1, p2 = points[i - 1], points[i]
+            line = Line("test", [p1, p2])
+            line = clipping.clip(line)
+            if line:
+                new_points.append(line.points[0])
+                new_points.append(line.points[1])
+
+        return Curve2D(self.name, new_points, precision=self.precision, color=self.color)
