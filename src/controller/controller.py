@@ -49,7 +49,7 @@ class Controller:
         self.display_file.add_object(Wireframe(name, points, color, is_solid))
 
     def create_curve2d(self, name, points, color):
-        self.display_file.add_object(Curve2D(name, points, color))
+        self.display_file.add_object(Curve2D(name, control_points=points, color=color))
 
     def remove_objects(self, indexes):
         self.display_file.remove_object(indexes)
