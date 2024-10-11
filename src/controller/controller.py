@@ -3,7 +3,7 @@ import numpy as np
 from model.window import Window
 from model.viewport import Viewport
 from model.display_file import DisplayFile
-from model.drawable import Point, Line, Wireframe
+from model.drawable import Point, Line, Wireframe, Curve2D
 from model.transformation import Transformation2D
 from model.obj_file_handler import ObjFileHandler
 
@@ -47,6 +47,9 @@ class Controller:
 
     def create_wireframe(self, name, points, color, is_solid):
         self.display_file.add_object(Wireframe(name, points, color, is_solid))
+
+    def create_curve2d(self, name, points, color):
+        self.display_file.add_object(Curve2D(name, control_points=points, color=color))
 
     def remove_objects(self, indexes):
         self.display_file.remove_object(indexes)
