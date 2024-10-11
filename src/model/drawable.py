@@ -39,7 +39,8 @@ class Drawable(Exportable, Importable):
             "point": "p",
             "line": "l",
             "wireframe": "l",
-            "solid wireframe": "f"
+            "solid wireframe": "f",
+            "curve2D": "c"
         }
         vertices = ""
         obj = ""
@@ -121,6 +122,9 @@ class Curve2D(Drawable):
         if points is None and control_points is None:
             raise ValueError("Defina ao menos um: points ou control_points")
 
+        if control_points is not None:
+            assert len(control_points) >= 4 and len(control_points) % 2 == 0, "Número de pontos precisa ser >= 4 e divisível por 2 para criar um Curve2D"
+
         self.section_indexes = [] if section_indexes is None else section_indexes
         self.precision = precision
         self.control_points = control_points if control_points is None else np.array(control_points, dtype=np.float64)
@@ -171,7 +175,6 @@ class Curve2D(Drawable):
 
     def draw(self, canvas):
         sections = self.split_points()
-        print(sections)
         for points in sections:
             for i, point in enumerate(points[1:]):
                 i += 1

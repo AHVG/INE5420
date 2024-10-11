@@ -1,6 +1,6 @@
 import os
 
-from model.drawable import Point, Line, Wireframe
+from model.drawable import Point, Line, Wireframe, Curve2D
 
 
 class ObjFileHandler:
@@ -59,7 +59,7 @@ class ObjFileHandler:
                             objects[name]["material"] = name
                         
                         parts = lines[i + 2].strip().split()
-                        if parts[0] in ("l", "f", "p"):
+                        if parts[0] in ("l", "f", "p",  "c"):
                             objects[name]["type"] = parts[0]
                             objects[name]["vertices"] = [int(v) for v in parts[1:]]
 
@@ -111,6 +111,8 @@ class ObjFileHandler:
             elif len(points) > 2:
                 if attr["type"] == "f":
                     new_object = Wireframe(name, points, color, is_solid=True)
+                elif attr["type"] == "c":
+                    new_object = Curve2D(name, points, color=color)
                 else:
                     new_object = Wireframe(name, points, color)
             
