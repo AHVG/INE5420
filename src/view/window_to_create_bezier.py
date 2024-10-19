@@ -6,7 +6,7 @@ from ast import literal_eval
 from view.attached_window import AttachedWindow
 
 
-class WindowToCreateCurve2D(AttachedWindow):
+class WindowToCreateBezier(AttachedWindow):
     
     def configure(self):
         tk.Label(self, text="Name:").grid(row=0, column=0)
@@ -25,9 +25,9 @@ class WindowToCreateCurve2D(AttachedWindow):
         self.create_button.grid(row=4, column=0, columnspan=2, pady=5)
     
     def register_events(self):
-        self.create_button.configure(command=self.create_curve2d_from_dialog)
+        self.create_button.configure(command=self.create_bezier_from_dialog)
 
-    def create_curve2d_from_dialog(self):
+    def create_bezier_from_dialog(self):
         try:
             name = self.name.get()
             color = self.color_entry.get()

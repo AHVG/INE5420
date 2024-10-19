@@ -119,43 +119,13 @@ class Wireframe(Drawable):
 class Curve2D(Drawable):
 
     def __init__(self, name, points=None, control_points=None, section_indexes=None, precision=10, color="#000000"):
-        if points is None and control_points is None:
-            raise ValueError("Defina ao menos um: points ou control_points")
-
-        if control_points is not None:
-            assert len(control_points) >= 4 and len(control_points) % 2 == 0, "Número de pontos precisa ser >= 4 e divisível por 2 para criar um Curve2D"
-
         self.section_indexes = [] if section_indexes is None else section_indexes
         self.precision = precision
         self.control_points = control_points if control_points is None else np.array(control_points, dtype=np.float64)
         super().__init__("curve2D", name, points if points is not None else self.calculate_points(), color)
 
-    def calculate_bezier(self, p1, p2, p3, p4):
-        points = []
-        step = self.precision
-        for t in range(0, 101, step):
-            t /= 100.0
-            x = p1[0] * (-t**3 + 3.0 * t**2 - 3.0 * t + 1) + p2[0] * (3.0 * t**3 - 6.0 * t**2 + 3.0 * t) + p3[0] * (-3.0 * t**3 + 3.0 * t**2) + p4[0] * t**3
-            y = p1[1] * (-t**3 + 3.0 * t**2 - 3.0 * t + 1) + p2[1] * (3.0 * t**3 - 6.0 * t**2 + 3.0 * t) + p3[1] * (-3.0 * t**3 + 3.0 * t**2) + p4[1] * t**3
-            points.append((x, y))
-
-        return points
-
     def calculate_points(self):
-        points = []
-        p1, p2, p3, p4 = self.control_points[0], self.control_points[1], self.control_points[2], self.control_points[3]
-        points.extend(self.calculate_bezier(p1, p2, p3, p4))
-
-        _, _, prev_p3, prev_p4 = p1, p2, p3, p4
-        for i in range(4, len(self.control_points), 2):
-            current_p1 = prev_p4
-            current_p2 = 2 * prev_p4 - prev_p3
-            current_p3 = self.control_points[i]
-            current_p4 = self.control_points[i + 1]
-            _, _, prev_p3, prev_p4 = current_p1, current_p2, current_p3, current_p4
-            points.extend(self.calculate_bezier(current_p1, current_p2, current_p3, current_p4))
-
-        return points
+        pass
 
     def split_points(self):
         sections = []
@@ -197,4 +167,95 @@ class Curve2D(Drawable):
             else:
                 self.section_indexes.append(j)
 
-        return Curve2D(self.name, new_points, self.control_points, self.section_indexes, precision=self.precision, color=self.color)
+        return self.__class__(self.name, new_points, self.control_points, self.section_indexes, precision=self.precision, color=self.color)
+
+
+class Bezier(Curve2D):
+    def __init__(self, name, points=None, control_points=None, section_indexes=None, precision=10, color="#000000"):
+        if points is None and control_points is None:
+            raise ValueError("Defina ao menos um: points ou control_points")
+
+        if control_points is not None:
+            assert len(control_points) >= 4 and len(control_points) % 2 == 0, "Número de pontos precisa ser >= 4 e divisível por 2 para criar um Curve2D"
+
+        super().__init__(name, points, control_points, section_indexes, precision, color)
+    
+    def calculate_bezier(self, p1, p2, p3, p4):
+        points = []
+        step = self.precision
+        for t in range(0, 101, step):
+            t /= 100.0
+            x = p1[0] * (-t**3 + 3.0 * t**2 - 3.0 * t + 1) + p2[0] * (3.0 * t**3 - 6.0 * t**2 + 3.0 * t) + p3[0] * (-3.0 * t**3 + 3.0 * t**2) + p4[0] * t**3
+            y = p1[1] * (-t**3 + 3.0 * t**2 - 3.0 * t + 1) + p2[1] * (3.0 * t**3 - 6.0 * t**2 + 3.0 * t) + p3[1] * (-3.0 * t**3 + 3.0 * t**2) + p4[1] * t**3
+            points.append((x, y))
+
+        return points
+
+    def calculate_points(self):
+        points = []
+        p1, p2, p3, p4 = self.control_points[0], self.control_points[1], self.control_points[2], self.control_points[3]
+        points.extend(self.calculate_bezier(p1, p2, p3, p4))
+
+        _, _, prev_p3, prev_p4 = p1, p2, p3, p4
+        for i in range(4, len(self.control_points), 2):
+            current_p1 = prev_p4
+            current_p2 = 2 * prev_p4 - prev_p3
+            current_p3 = self.control_points[i]
+            current_p4 = self.control_points[i + 1]
+            _, _, prev_p3, prev_p4 = current_p1, current_p2, current_p3, current_p4
+            points.extend(self.calculate_bezier(current_p1, current_p2, current_p3, current_p4))
+
+        return points
+
+
+class BSpline(Curve2D):
+    def calculate_bspline(self, p0, p1, p2, p3):
+        points = []
+        delta_t = 1 / self.precision
+
+        # Matriz de base para B-Spline cúbica
+        M = np.array([
+            [-1, 3, -3, 1],
+            [3, -6, 3, 0],
+            [-3, 0, 3, 0],
+            [1, 4, 1, 0]
+        ]) / 6.0
+
+        # Vetor de controle
+        Gx = np.array([p0[0], p1[0], p2[0], p3[0]])
+        Gy = np.array([p0[1], p1[1], p2[1], p3[1]])
+
+        # Calcula os coeficientes das diferenças finitas para o eixo X e Y
+        Ax = M @ Gx
+        Ay = M @ Gy
+
+        # Inicializa o ponto inicial e as diferenças
+        x = Ax[0]
+        dx = Ax[1] * delta_t
+        ddx = 2 * Ax[2] * delta_t**2
+        dddx = 6 * Ax[3] * delta_t**3
+
+        y = Ay[0]
+        dy = Ay[1] * delta_t
+        ddy = 2 * Ay[2] * delta_t**2
+        dddy = 6 * Ay[3] * delta_t**3
+
+        for _ in range(self.precision):
+            points.append((x, y))
+            x += dx
+            dx += ddx
+            ddx += dddx
+
+            y += dy
+            dy += ddy
+            ddy += dddy
+
+        return points
+
+    def calculate_points(self):
+        points = []
+        n = len(self.control_points) - 3  # Número de segmentos
+        for i in range(n):
+            p0, p1, p2, p3 = self.control_points[i:i + 4]
+            points.extend(self.calculate_bspline(p0, p1, p2, p3))
+        return points
