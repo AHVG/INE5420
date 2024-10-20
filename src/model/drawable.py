@@ -171,10 +171,11 @@ class Curve2D(Drawable):
             transformed_point = point_3d @ matrix
             self.points[i] = np.asarray(transformed_point)[0,:-1]
 
-        for i, point in enumerate(self.control_points):
-            point_3d = np.array([point[0], point[1], 1.0], dtype=np.float64)
-            transformed_point = point_3d @ matrix
-            self.control_points[i] = np.asarray(transformed_point)[0,:-1]
+        if self.control_points is not None:
+            for i, point in enumerate(self.control_points):
+                point_3d = np.array([point[0], point[1], 1.0], dtype=np.float64)
+                transformed_point = point_3d @ matrix
+                self.control_points[i] = np.asarray(transformed_point)[0,:-1]
 
         return self
 
@@ -188,11 +189,12 @@ class Curve2D(Drawable):
             y_viewport = (1 - (point[1] - window_bounds[2]) / (window_bounds[3] - window_bounds[2])) * (viewport.bounds[3] - viewport.bounds[2])
             points.append([x_viewport, y_viewport])  
         
-        for control_point in self.control_points:
-            window_bounds = window.get_bounds()
-            x_viewport = ((control_point[0] - window_bounds[0]) / (window_bounds[1] - window_bounds[0])) * (viewport.bounds[1] - viewport.bounds[0])
-            y_viewport = (1 - (control_point[1] - window_bounds[2]) / (window_bounds[3] - window_bounds[2])) * (viewport.bounds[3] - viewport.bounds[2])
-            control_points.append([x_viewport, y_viewport])
+        if self.control_points is not None:    
+            for control_point in self.control_points:
+                window_bounds = window.get_bounds()
+                x_viewport = ((control_point[0] - window_bounds[0]) / (window_bounds[1] - window_bounds[0])) * (viewport.bounds[1] - viewport.bounds[0])
+                y_viewport = (1 - (control_point[1] - window_bounds[2]) / (window_bounds[3] - window_bounds[2])) * (viewport.bounds[3] - viewport.bounds[2])
+                control_points.append([x_viewport, y_viewport])
 
         drawable = self.copy(points=points, control_points=control_points)
         return drawable
@@ -205,9 +207,10 @@ class Curve2D(Drawable):
                 prev_point = points[i - 1]
                 canvas.create_line(prev_point[0], prev_point[1], point[0], point[1], fill=self.color, width=2)
 
-        for point in self.control_points:
-            x, y = point[0], point[1]
-            canvas.create_oval(x-2, y-2, x+2, y+2, fill=self.color, outline=self.color)
+        if self.control_points is not None:
+            for point in self.control_points:
+                x, y = point[0], point[1]
+                canvas.create_oval(x-2, y-2, x+2, y+2, fill=self.color, outline=self.color)
 
     def clip(self, window_clip):
         new_points = []
@@ -225,13 +228,16 @@ class Curve2D(Drawable):
             else:
                 self.section_indexes.append(j)
         
-        new_control_points = []
-        clipping = PointClipping(window_clip)
-        for point in self.control_points:
-            point = Point("teste", [point])
-            point = clipping.clip(point)
-            if point:
-                new_control_points.append(point.points[0])
+        if self.control_points is not None:
+            new_control_points = []
+            clipping = PointClipping(window_clip)
+            for point in self.control_points:
+                point = Point("teste", [point])
+                point = clipping.clip(point)
+                if point:
+                    new_control_points.append(point.points[0])
+        else:
+            new_control_points = None
 
         return self.__class__(self.name, new_points, new_control_points, self.section_indexes, precision=self.precision, color=self.color)
 
