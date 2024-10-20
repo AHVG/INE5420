@@ -59,6 +59,25 @@ class Drawable(Exportable, Importable):
 
         return vertices, obj, mtl, offset + len(self.points)
 
+    def transform(self, window, viewport):
+        points = []
+
+        for point in self.points:
+            window_bounds = window.get_bounds()
+            x_viewport = ((point[0] - window_bounds[0]) / (window_bounds[1] - window_bounds[0])) * (viewport.bounds[1] - viewport.bounds[0])
+            y_viewport = (1 - (point[1] - window_bounds[2]) / (window_bounds[3] - window_bounds[2])) * (viewport.bounds[3] - viewport.bounds[2])
+            points.append([x_viewport, y_viewport])        
+
+        drawable = self.copy(points=points)
+        return drawable
+
+    def __matmul__(self, matrix):
+        for i, point in enumerate(self.points):
+            point_3d = np.array([point[0], point[1], 1.0], dtype=np.float64)
+            transformed_point = point_3d @ matrix
+            self.points[i] = np.asarray(transformed_point)[0,:-1]
+        return self
+    
     def draw(self, canvas):
         pass
 
@@ -122,14 +141,116 @@ class Curve2D(Drawable):
         if points is None and control_points is None:
             raise ValueError("Defina ao menos um: points ou control_points")
 
-        if control_points is not None:
-            assert len(control_points) >= 4 and len(control_points) % 2 == 0, "Número de pontos precisa ser >= 4 e divisível por 2 para criar um Curve2D"
-
         self.section_indexes = [] if section_indexes is None else section_indexes
         self.precision = precision
         self.control_points = control_points if control_points is None else np.array(control_points, dtype=np.float64)
         super().__init__("curve2D", name, points if points is not None else self.calculate_points(), color)
 
+    def calculate_points(self):
+        pass
+
+    def split_points(self):
+        sections = []
+
+        start_index = 0
+
+        for index in self.section_indexes:
+            s = self.points[start_index:index]
+            if len(s):
+                sections.append(s)
+            start_index = index 
+
+        if start_index < len(self.points):
+            sections.append(self.points[start_index:])
+
+        return sections
+
+    def __matmul__(self, matrix):
+        for i, point in enumerate(self.points):
+            point_3d = np.array([point[0], point[1], 1.0], dtype=np.float64)
+            transformed_point = point_3d @ matrix
+            self.points[i] = np.asarray(transformed_point)[0,:-1]
+
+        # if self.control_points is not None:
+        #     for i, point in enumerate(self.control_points):
+        #         point_3d = np.array([point[0], point[1], 1.0], dtype=np.float64)
+        #         transformed_point = point_3d @ matrix
+        #         self.control_points[i] = np.asarray(transformed_point)[0,:-1]
+
+        return self
+
+    def transform(self, window, viewport):
+        points = []
+
+        for point in self.points:
+            window_bounds = window.get_bounds()
+            x_viewport = ((point[0] - window_bounds[0]) / (window_bounds[1] - window_bounds[0])) * (viewport.bounds[1] - viewport.bounds[0])
+            y_viewport = (1 - (point[1] - window_bounds[2]) / (window_bounds[3] - window_bounds[2])) * (viewport.bounds[3] - viewport.bounds[2])
+            points.append([x_viewport, y_viewport])  
+        
+        # control_points = []
+        # if self.control_points is not None:    
+        #     for control_point in self.control_points:
+        #         window_bounds = window.get_bounds()
+        #         x_viewport = ((control_point[0] - window_bounds[0]) / (window_bounds[1] - window_bounds[0])) * (viewport.bounds[1] - viewport.bounds[0])
+        #         y_viewport = (1 - (control_point[1] - window_bounds[2]) / (window_bounds[3] - window_bounds[2])) * (viewport.bounds[3] - viewport.bounds[2])
+        #         control_points.append([x_viewport, y_viewport])
+
+        # drawable = self.copy(points=points, control_points=control_points)
+        drawable = self.copy(points=points)
+        return drawable
+
+    def draw(self, canvas):
+        sections = self.split_points()
+        for points in sections:
+            for i, point in enumerate(points[1:]):
+                i += 1
+                prev_point = points[i - 1]
+                canvas.create_line(prev_point[0], prev_point[1], point[0], point[1], fill=self.color, width=2)
+
+        # if self.control_points is not None:
+        #     for point in self.control_points:
+        #         x, y = point[0], point[1]
+        #         canvas.create_oval(x-2, y-2, x+2, y+2, fill=self.color, outline=self.color)
+
+    def clip(self, window_clip):
+        new_points = []
+        clipping = LineClipping(window_clip)
+        self.section_indexes = []
+        j = 0
+        for i in range(1, len(self.points)):
+            p1, p2 = self.points[i - 1], self.points[i]
+            line = Line("test", [p1, p2])
+            line = clipping.clip(line)
+            if line is not None:
+                j += 2
+                new_points.append(line.points[0])
+                new_points.append(line.points[1])
+            else:
+                self.section_indexes.append(j)
+        
+        # if self.control_points is not None:
+        #     new_control_points = []
+        #     clipping = PointClipping(window_clip)
+        #     for point in self.control_points:
+        #         point = Point("teste", [point])
+        #         point = clipping.clip(point)
+        #         if point:
+        #             new_control_points.append(point.points[0])
+        # else:
+        #     new_control_points = None
+        new_control_points = []
+
+        return self.__class__(self.name, new_points, new_control_points, self.section_indexes, precision=self.precision, color=self.color)
+
+
+class Bezier(Curve2D):
+    def __init__(self, name, points=None, control_points=None, section_indexes=None, precision=10, color="#000000"):
+        if control_points is not None:
+            assert points is not None or len(control_points) >= 4 and len(control_points) % 2 == 0, "Número de pontos precisa ser >= 4 e divisível por 2 para criar um Curve2D"
+
+        super().__init__(name, points, control_points, section_indexes, precision, color)
+    
     def calculate_bezier(self, p1, p2, p3, p4):
         points = []
         step = self.precision
@@ -157,44 +278,81 @@ class Curve2D(Drawable):
 
         return points
 
-    def split_points(self):
-        sections = []
 
-        start_index = 0
+class BSpline(Curve2D):
+        
+    # def calculate_bspline(self, p0, p1, p2, p3):
+    #     points = []
+    #     step = 1 / self.precision
+    #     for t in np.arange(0, 1 + step, step):
+    #         t2 = t * t
+    #         t3 = t2 * t
 
-        for index in self.section_indexes:
-            s = self.points[start_index:index]
-            if len(s):
-                sections.append(s)
-            start_index = index 
+    #         # Calculando os coeficientes das funções B-Spline cúbicas
+    #         b0 = (-t3 + 3 * t2 - 3 * t + 1) / 6.0
+    #         b1 = (3 * t3 - 6 * t2 + 4) / 6.0
+    #         b2 = (-3 * t3 + 3 * t2 + 3 * t + 1) / 6.0
+    #         b3 = t3 / 6.0
 
-        if start_index < len(self.points):
-            sections.append(self.points[start_index:])
+    #         # Calculando as coordenadas x e y dos pontos da curva B-Spline
+    #         x = b0 * p0[0] + b1 * p1[0] + b2 * p2[0] + b3 * p3[0]
+    #         y = b0 * p0[1] + b1 * p1[1] + b2 * p2[1] + b3 * p3[1]
 
-        return sections
+    #         points.append((x, y))
 
-    def draw(self, canvas):
-        sections = self.split_points()
-        for points in sections:
-            for i, point in enumerate(points[1:]):
-                i += 1
-                prev_point = points[i - 1]
-                canvas.create_line(prev_point[0], prev_point[1], point[0], point[1], fill=self.color, width=2)
+    #     return points
+    
+    def fwdDiff(self, n, x, dx, d2x, d3x, y, dy, d2y, d3y):
+        points = []
+        old_x, old_y = x, y
 
-    def clip(self, window_clip):
-        new_points = []
-        clipping = LineClipping(window_clip)
-        self.section_indexes = []
-        j = 0
-        for i in range(1, len(self.points)):
-            p1, p2 = self.points[i - 1], self.points[i]
-            line = Line("test", [p1, p2])
-            line = clipping.clip(line)
-            if line is not None:
-                j += 2
-                new_points.append(line.points[0])
-                new_points.append(line.points[1])
-            else:
-                self.section_indexes.append(j)
+        for _ in range(n):
+            x += dx
+            dx += d2x
+            d2x += d3x
 
-        return Curve2D(self.name, new_points, self.control_points, self.section_indexes, precision=self.precision, color=self.color)
+            y += dy
+            dy += d2y
+            d2y += d3y
+
+            points.append((old_x, old_y))
+
+            old_x, old_y = x, y
+        
+        points.append((old_x, old_y))
+        return points
+
+    def calculate_points(self):
+        points = []
+        delta = 1 / self.precision
+        n = self.precision
+
+        M_bspline = (1 / 6) * np.array([
+            [-1,  3, -3,  1],
+            [ 3, -6,  3,  0],
+            [-3,  0,  3,  0],
+            [ 1,  4,  1,  0]
+        ])
+
+        for i in range(len(self.control_points) - 3):
+            p0, p1, p2, p3 = self.control_points[i:i + 4]
+
+            Gx = np.array([p0[0], p1[0], p2[0], p3[0]])
+            Gy = np.array([p0[1], p1[1], p2[1], p3[1]])
+
+            Cx = M_bspline @ Gx
+            Cy = M_bspline @ Gy
+
+            E = np.array([
+                [0, 0, 0, 1],
+                [delta**3, delta**2, delta, 0],
+                [6 * delta**3, 2 * delta**2, 0, 0],
+                [6 * delta**3, 0, 0, 0]
+            ])
+
+            fx, dfx, d2fx, d3fx = E @ Cx
+            fy, dfy, d2fy, d3fy = E @ Cy
+
+            points.extend(self.fwdDiff(n, fx, dfx, d2fx, d3fx, fy, dfy, d2fy, d3fy))
+            
+        return points

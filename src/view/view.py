@@ -10,7 +10,8 @@ from view.window_to_apply_transformations import WindowToApplyTransformations
 from view.window_to_create_point import WindowToCreatePoint
 from view.window_to_create_line import WindowToCreateLine
 from view.window_to_create_wireframe import WindowToCreateWireframe
-from view.window_to_create_curve2d import WindowToCreateCurve2D
+from view.window_to_create_bezier import WindowToCreateBezier
+from view.window_to_create_bspline import WindowToCreateBSpline
 from view.canvas import Canvas
 
 
@@ -86,7 +87,8 @@ class View(BaseUIComponent):
         self.point_create_button.config(command=lambda: WindowToCreatePoint(self, self.controller, self.canvas))
         self.line_create_button.config(command=lambda: WindowToCreateLine(self, self.controller, self.canvas))
         self.wireframe_create_button.config(command=lambda: WindowToCreateWireframe(self, self.controller, self.canvas))
-        self.curve2d_create_button.config(command=lambda: WindowToCreateCurve2D(self, self.controller, self.canvas))
+        self.bezier_create_button.config(command=lambda: WindowToCreateBezier(self, self.controller, self.canvas))
+        self.bspline_create_button.config(command=lambda: WindowToCreateBSpline(self, self.controller, self.canvas))
         self.objects_remove_button.config(command=self.remove_objects)
 
         self.apply_transformation.config(command=lambda: WindowToApplyTransformations(self, self.controller, self.canvas))
@@ -197,14 +199,17 @@ class View(BaseUIComponent):
         self.wireframe_create_button = tk.Button(self.manipulation_frame, text="Create Wireframe",)
         self.wireframe_create_button.grid(row=1, column=0, padx=5, pady=5)
     
-        self.curve2d_create_button = tk.Button(self.manipulation_frame, text="Create Curve2D",)
-        self.curve2d_create_button.grid(row=1, column=1, padx=5, pady=5)
+        self.bezier_create_button = tk.Button(self.manipulation_frame, text="Create Bezier",)
+        self.bezier_create_button.grid(row=1, column=1, padx=5, pady=5)
+        
+        self.bspline_create_button = tk.Button(self.manipulation_frame, text="Create BSpline",)
+        self.bspline_create_button.grid(row=2, column=0, padx=5, pady=5)
     
         self.objects_remove_button = tk.Button(self.manipulation_frame, text="Remove selected object",)
-        self.objects_remove_button.grid(row=2, column=0, padx=5, pady=5)
-        # (10.0,20.0),(10.0,70.0),(60.0,70.0),(60.0,20.0),(110.0,-30.0),(110.0,20.0)
+        self.objects_remove_button.grid(row=3, column=0, padx=5, pady=5)
+
         self.apply_transformation = tk.Button(self.manipulation_frame, text="Apply transformation",)
-        self.apply_transformation.grid(row=2, column=1, padx=5, pady=5)
+        self.apply_transformation.grid(row=3, column=1, padx=5, pady=5)
     
     def remove_objects(self):
         index = self.objects_listbox.curselection()
