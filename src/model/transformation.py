@@ -59,7 +59,7 @@ class Transformation2D(Transformation):
 
     def escalation(self, factor):
         center = self.get_center(self.drawable)
-        return self.escalation_relative_to_a_point(center)
+        return self.escalation_relative_to_a_point(factor, center)
     
     def escalation_relative_to_a_point(self, factor, point):
         escalation_matrix = np.matrix([
@@ -75,8 +75,4 @@ class Transformation2D(Transformation):
         return self
     
     def apply(self):
-        for i, point in enumerate(self.drawable.points):
-            point_3d = np.array([point[0], point[1], 1.0], dtype=np.float64)
-            transformed_point = point_3d @ self.matrix
-            self.drawable.points[i] = np.asarray(transformed_point)[0,:-1]
-        return self.drawable
+        return self.drawable @ self.matrix

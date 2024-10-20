@@ -12,7 +12,7 @@ class DisplayFile:
             Line("eixo y", [(0, -10000), (0, 10000)]),
             Wireframe("Quadrado", [(10, 10), (10, 100), (100, 100), (100, 10)], "#ff0"),
             Bezier("Teste Curva", control_points=[(10.0,0.0), (10.0,50.0), (60.0,50.0), (60.0,0.0), (60.0,-50.0), (110.0,0.0), (130.0,80.0), (160.0,30.0), (130.0,80.0), (50.0,-100.0), (130.0,80.0), (-150.0,-100.0)], color="#f00"),
-            BSpline("Teste Spline", control_points=[(-20,60), (-50,110), (-80,60), (-110,140)], color="#f0f")
+            BSpline("Teste Spline", control_points=[(-20,60), (-50,110), (-80,60), (-110,140), (-160,30), (-200,80)], color="#f0f")
         ]
     
     def add_object(self, object):

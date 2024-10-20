@@ -59,6 +59,25 @@ class Drawable(Exportable, Importable):
 
         return vertices, obj, mtl, offset + len(self.points)
 
+    def transform(self, window, viewport):
+        points = []
+
+        for point in self.points:
+            window_bounds = window.get_bounds()
+            x_viewport = ((point[0] - window_bounds[0]) / (window_bounds[1] - window_bounds[0])) * (viewport.bounds[1] - viewport.bounds[0])
+            y_viewport = (1 - (point[1] - window_bounds[2]) / (window_bounds[3] - window_bounds[2])) * (viewport.bounds[3] - viewport.bounds[2])
+            points.append([x_viewport, y_viewport])        
+
+        drawable = self.copy(points=points)
+        return drawable
+
+    def __matmul__(self, matrix):
+        for i, point in enumerate(self.points):
+            point_3d = np.array([point[0], point[1], 1.0], dtype=np.float64)
+            transformed_point = point_3d @ matrix
+            self.points[i] = np.asarray(transformed_point)[0,:-1]
+        return self
+    
     def draw(self, canvas):
         pass
 
@@ -119,6 +138,9 @@ class Wireframe(Drawable):
 class Curve2D(Drawable):
 
     def __init__(self, name, points=None, control_points=None, section_indexes=None, precision=10, color="#000000"):
+        if points is None and control_points is None:
+            raise ValueError("Defina ao menos um: points ou control_points")
+
         self.section_indexes = [] if section_indexes is None else section_indexes
         self.precision = precision
         self.control_points = control_points if control_points is None else np.array(control_points, dtype=np.float64)
@@ -143,6 +165,38 @@ class Curve2D(Drawable):
 
         return sections
 
+    def __matmul__(self, matrix):
+        for i, point in enumerate(self.points):
+            point_3d = np.array([point[0], point[1], 1.0], dtype=np.float64)
+            transformed_point = point_3d @ matrix
+            self.points[i] = np.asarray(transformed_point)[0,:-1]
+
+        for i, point in enumerate(self.control_points):
+            point_3d = np.array([point[0], point[1], 1.0], dtype=np.float64)
+            transformed_point = point_3d @ matrix
+            self.control_points[i] = np.asarray(transformed_point)[0,:-1]
+
+        return self
+
+    def transform(self, window, viewport):
+        points = []
+        control_points = []
+
+        for point in self.points:
+            window_bounds = window.get_bounds()
+            x_viewport = ((point[0] - window_bounds[0]) / (window_bounds[1] - window_bounds[0])) * (viewport.bounds[1] - viewport.bounds[0])
+            y_viewport = (1 - (point[1] - window_bounds[2]) / (window_bounds[3] - window_bounds[2])) * (viewport.bounds[3] - viewport.bounds[2])
+            points.append([x_viewport, y_viewport])  
+        
+        for control_point in self.control_points:
+            window_bounds = window.get_bounds()
+            x_viewport = ((control_point[0] - window_bounds[0]) / (window_bounds[1] - window_bounds[0])) * (viewport.bounds[1] - viewport.bounds[0])
+            y_viewport = (1 - (control_point[1] - window_bounds[2]) / (window_bounds[3] - window_bounds[2])) * (viewport.bounds[3] - viewport.bounds[2])
+            control_points.append([x_viewport, y_viewport])
+
+        drawable = self.copy(points=points, control_points=control_points)
+        return drawable
+
     def draw(self, canvas):
         sections = self.split_points()
         for points in sections:
@@ -150,6 +204,10 @@ class Curve2D(Drawable):
                 i += 1
                 prev_point = points[i - 1]
                 canvas.create_line(prev_point[0], prev_point[1], point[0], point[1], fill=self.color, width=2)
+
+        for point in self.control_points:
+            x, y = point[0], point[1]
+            canvas.create_oval(x-2, y-2, x+2, y+2, fill=self.color, outline=self.color)
 
     def clip(self, window_clip):
         new_points = []
@@ -166,17 +224,22 @@ class Curve2D(Drawable):
                 new_points.append(line.points[1])
             else:
                 self.section_indexes.append(j)
+        
+        new_control_points = []
+        clipping = PointClipping(window_clip)
+        for point in self.control_points:
+            point = Point("teste", [point])
+            point = clipping.clip(point)
+            if point:
+                new_control_points.append(point.points[0])
 
-        return self.__class__(self.name, new_points, self.control_points, self.section_indexes, precision=self.precision, color=self.color)
+        return self.__class__(self.name, new_points, new_control_points, self.section_indexes, precision=self.precision, color=self.color)
 
 
 class Bezier(Curve2D):
     def __init__(self, name, points=None, control_points=None, section_indexes=None, precision=10, color="#000000"):
-        if points is None and control_points is None:
-            raise ValueError("Defina ao menos um: points ou control_points")
-
         if control_points is not None:
-            assert len(control_points) >= 4 and len(control_points) % 2 == 0, "Número de pontos precisa ser >= 4 e divisível por 2 para criar um Curve2D"
+            assert points is not None or len(control_points) >= 4 and len(control_points) % 2 == 0, "Número de pontos precisa ser >= 4 e divisível por 2 para criar um Curve2D"
 
         super().__init__(name, points, control_points, section_indexes, precision, color)
     
@@ -209,52 +272,31 @@ class Bezier(Curve2D):
 
 
 class BSpline(Curve2D):
+        
     def calculate_bspline(self, p0, p1, p2, p3):
         points = []
-        delta_t = 1 / self.precision
+        step = 1 / self.precision
+        for t in np.arange(0, 1 + step, step):
+            t2 = t * t
+            t3 = t2 * t
 
-        # Matriz de base para B-Spline cúbica
-        M = np.array([
-            [-1, 3, -3, 1],
-            [3, -6, 3, 0],
-            [-3, 0, 3, 0],
-            [1, 4, 1, 0]
-        ]) / 6.0
+            # Calculando os coeficientes das funções B-Spline cúbicas
+            b0 = (-t3 + 3 * t2 - 3 * t + 1) / 6.0
+            b1 = (3 * t3 - 6 * t2 + 4) / 6.0
+            b2 = (-3 * t3 + 3 * t2 + 3 * t + 1) / 6.0
+            b3 = t3 / 6.0
 
-        # Vetor de controle
-        Gx = np.array([p0[0], p1[0], p2[0], p3[0]])
-        Gy = np.array([p0[1], p1[1], p2[1], p3[1]])
+            # Calculando as coordenadas x e y dos pontos da curva B-Spline
+            x = b0 * p0[0] + b1 * p1[0] + b2 * p2[0] + b3 * p3[0]
+            y = b0 * p0[1] + b1 * p1[1] + b2 * p2[1] + b3 * p3[1]
 
-        # Calcula os coeficientes das diferenças finitas para o eixo X e Y
-        Ax = M @ Gx
-        Ay = M @ Gy
-
-        # Inicializa o ponto inicial e as diferenças
-        x = Ax[0]
-        dx = Ax[1] * delta_t
-        ddx = 2 * Ax[2] * delta_t**2
-        dddx = 6 * Ax[3] * delta_t**3
-
-        y = Ay[0]
-        dy = Ay[1] * delta_t
-        ddy = 2 * Ay[2] * delta_t**2
-        dddy = 6 * Ay[3] * delta_t**3
-
-        for _ in range(self.precision):
             points.append((x, y))
-            x += dx
-            dx += ddx
-            ddx += dddx
-
-            y += dy
-            dy += ddy
-            ddy += dddy
 
         return points
 
     def calculate_points(self):
         points = []
-        n = len(self.control_points) - 3  # Número de segmentos
+        n = len(self.control_points) - 3
         for i in range(n):
             p0, p1, p2, p3 = self.control_points[i:i + 4]
             points.extend(self.calculate_bspline(p0, p1, p2, p3))
