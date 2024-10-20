@@ -273,31 +273,78 @@ class Bezier(Curve2D):
 
 class BSpline(Curve2D):
         
-    def calculate_bspline(self, p0, p1, p2, p3):
+    # def calculate_bspline(self, p0, p1, p2, p3):
+    #     points = []
+    #     step = 1 / self.precision
+    #     for t in np.arange(0, 1 + step, step):
+    #         t2 = t * t
+    #         t3 = t2 * t
+
+    #         # Calculando os coeficientes das funções B-Spline cúbicas
+    #         b0 = (-t3 + 3 * t2 - 3 * t + 1) / 6.0
+    #         b1 = (3 * t3 - 6 * t2 + 4) / 6.0
+    #         b2 = (-3 * t3 + 3 * t2 + 3 * t + 1) / 6.0
+    #         b3 = t3 / 6.0
+
+    #         # Calculando as coordenadas x e y dos pontos da curva B-Spline
+    #         x = b0 * p0[0] + b1 * p1[0] + b2 * p2[0] + b3 * p3[0]
+    #         y = b0 * p0[1] + b1 * p1[1] + b2 * p2[1] + b3 * p3[1]
+
+    #         points.append((x, y))
+
+    #     return points
+    
+    def fwdDiff(self, n, x, dx, d2x, d3x, y, dy, d2y, d3y):
         points = []
-        step = 1 / self.precision
-        for t in np.arange(0, 1 + step, step):
-            t2 = t * t
-            t3 = t2 * t
+        old_x, old_y = x, y
 
-            # Calculando os coeficientes das funções B-Spline cúbicas
-            b0 = (-t3 + 3 * t2 - 3 * t + 1) / 6.0
-            b1 = (3 * t3 - 6 * t2 + 4) / 6.0
-            b2 = (-3 * t3 + 3 * t2 + 3 * t + 1) / 6.0
-            b3 = t3 / 6.0
+        for _ in range(n):
+            x += dx
+            dx += d2x
+            d2x += d3x
 
-            # Calculando as coordenadas x e y dos pontos da curva B-Spline
-            x = b0 * p0[0] + b1 * p1[0] + b2 * p2[0] + b3 * p3[0]
-            y = b0 * p0[1] + b1 * p1[1] + b2 * p2[1] + b3 * p3[1]
+            y += dy
+            dy += d2y
+            d2y += d3y
 
-            points.append((x, y))
+            points.append((old_x, old_y))
 
+            old_x, old_y = x, y
+        
+        points.append((old_x, old_y))
         return points
 
     def calculate_points(self):
         points = []
-        n = len(self.control_points) - 3
-        for i in range(n):
+        delta = 1 / self.precision
+        n = self.precision
+
+        M_bspline = (1 / 6) * np.array([
+            [-1,  3, -3,  1],
+            [ 3, -6,  3,  0],
+            [-3,  0,  3,  0],
+            [ 1,  4,  1,  0]
+        ])
+
+        for i in range(len(self.control_points) - 3):
             p0, p1, p2, p3 = self.control_points[i:i + 4]
-            points.extend(self.calculate_bspline(p0, p1, p2, p3))
+
+            Gx = np.array([p0[0], p1[0], p2[0], p3[0]])
+            Gy = np.array([p0[1], p1[1], p2[1], p3[1]])
+
+            Cx = M_bspline @ Gx
+            Cy = M_bspline @ Gy
+
+            E = np.array([
+                [0, 0, 0, 1],
+                [delta**3, delta**2, delta, 0],
+                [6 * delta**3, 2 * delta**2, 0, 0],
+                [6 * delta**3, 0, 0, 0]
+            ])
+
+            fx, dfx, d2fx, d3fx = E @ Cx
+            fy, dfy, d2fy, d3fy = E @ Cy
+
+            points.extend(self.fwdDiff(n, fx, dfx, d2fx, d3fx, fy, dfy, d2fy, d3fy))
+            
         return points
