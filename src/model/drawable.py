@@ -171,11 +171,11 @@ class Curve2D(Drawable):
             transformed_point = point_3d @ matrix
             self.points[i] = np.asarray(transformed_point)[0,:-1]
 
-        if self.control_points is not None:
-            for i, point in enumerate(self.control_points):
-                point_3d = np.array([point[0], point[1], 1.0], dtype=np.float64)
-                transformed_point = point_3d @ matrix
-                self.control_points[i] = np.asarray(transformed_point)[0,:-1]
+        # if self.control_points is not None:
+        #     for i, point in enumerate(self.control_points):
+        #         point_3d = np.array([point[0], point[1], 1.0], dtype=np.float64)
+        #         transformed_point = point_3d @ matrix
+        #         self.control_points[i] = np.asarray(transformed_point)[0,:-1]
 
         return self
 
