@@ -3,7 +3,7 @@ import numpy as np
 from model.window import Window
 from model.viewport import Viewport
 from model.display_file import DisplayFile
-from model.drawable import Point, Line, Wireframe, Bezier
+from model.drawable import Point, Line, Wireframe, Bezier, BSpline
 from model.transformation import Transformation2D
 from model.obj_file_handler import ObjFileHandler
 
@@ -50,6 +50,9 @@ class Controller:
 
     def create_bezier(self, name, points, color):
         self.display_file.add_object(Bezier(name, control_points=points, color=color))
+    
+    def create_bspline(self, name, points, color):
+        self.display_file.add_object(BSpline(name, control_points=points, color=color))
 
     def remove_objects(self, indexes):
         self.display_file.remove_object(indexes)

@@ -6,7 +6,7 @@ from ast import literal_eval
 from view.attached_window import AttachedWindow
 
 
-class WindowToCreateBezier(AttachedWindow):
+class WindowToCreateBSpline(AttachedWindow):
     
     def configure(self):
         tk.Label(self, text="Name:").grid(row=0, column=0)
@@ -25,9 +25,9 @@ class WindowToCreateBezier(AttachedWindow):
         self.create_button.grid(row=4, column=0, columnspan=2, pady=5)
     
     def register_events(self):
-        self.create_button.configure(command=self.create_bezier_from_dialog)
+        self.create_button.configure(command=self.create_bspline_from_dialog)
 
-    def create_bezier_from_dialog(self):
+    def create_bspline_from_dialog(self):
         try:
             name = self.name.get()
             color = self.color_entry.get()
@@ -38,10 +38,10 @@ class WindowToCreateBezier(AttachedWindow):
             if not bool(hex_pattern.match(color)):
                 raise TypeError("Invalid hexadecimal value for color. Expected format #RRGGBB or #RGB")
             
-            self.controller.create_bezier(name, points, color)
+            self.controller.create_bspline(name, points, color)
             self.view.draw_canvas()
             self.view.update_objects_list()
-            self.view.log_message(f"Creating Bezier called {name} and with points {points}")
+            self.view.log_message(f"Creating BSpline called {name} and with points {points}")
         except ValueError:
             self.view.log_message(f"Failed to convert coordinates to float: {points}")
         except TypeError as te:
