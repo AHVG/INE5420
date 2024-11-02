@@ -70,6 +70,9 @@ class Drawable(Exportable, Importable):
 
         drawable = self.copy(points=points)
         return drawable
+    
+    def get_center(self):
+        return np.mean(self.points, axis=0)
 
     def __matmul__(self, matrix):
         for i, point in enumerate(self.points):
@@ -356,3 +359,29 @@ class BSpline(Curve2D):
             points.extend(self.fwdDiff(n, fx, dfx, d2fx, d3fx, fy, dfy, d2fy, d3fy))
             
         return points
+
+
+class Object3D(Drawable):
+    def __init__(self, name, points, color="#000000"):
+        super().__init__("Object3d", name, points, color)
+        #self.rotation_axle = [self.get_center(), self.get_center() + 1]
+
+    def __matmul__(self, matrix):
+        for i, point in enumerate(self.points):
+            point_4d = np.array([point[0], point[1], point[2], 1.0], dtype=np.float64)
+            transformed_point = point_4d @ matrix
+            self.points[i] = np.asarray(transformed_point)[0,:-1]
+        return self
+
+class Point3D(Object3D):
+    def __init__(self, name, points, color="#000000"):
+        assert len(points) == 1, "Número de pontos precisa ser = 1 para criar um Point"
+        super().__init__("point3d", name, points, color)
+
+    def draw(self, canvas):
+        x, y, z = self.points[0]
+        canvas.create_oval(x-2, y-2, x+2, y+2, fill=self.color, outline=self.color)
+
+    def clip(self, window_clip):
+        return PointClipping(window_clip).clip(self)
+    
