@@ -11,7 +11,8 @@ class Viewport:
         drawable = drawable.copy()
 
         drawable = Transformation3D(drawable).rotation(\
-                   np.radians(self.window.angle), self.window.get_offset()).apply()
+                   np.radians(self.window.angle), self.window.get_offset()).escalation_relative_to_a_point(\
+                   [1/(self.window.width/2), 1/(self.window.height/2), 1/(self.window.depth/2)], self.window.get_offset()).apply()
 
         #drawable = drawable.clip((self.window.get_bounds()[0] + 1/15, self.window.get_bounds()[2] + 1/15, self.window.get_bounds()[1] - 1/15, self.window.get_bounds()[3] - 1/15))
 

@@ -45,15 +45,7 @@ class Window:
         self.v_up = np.array([0, 1, 0], dtype=np.float64)  # Vetor para cima
 
     def get_bounds(self):
-        half_width = self.width / 2
-        half_height = self.height / 2
-        half_depth = self.depth / 2
-
-        return np.array([
-            self.offset[0] - half_width, self.offset[0] + half_width,    # x_min, x_max
-            self.offset[1] - half_height, self.offset[1] + half_height,  # y_min, y_max
-            self.offset[2] - half_depth, self.offset[2] + half_depth     # z_min, z_max
-        ], dtype=np.float64)
+        return np.array([self.offset[0] - 1, self.offset[0] + 1, self.offset[1] - 1, self.offset[1] + 1, self.offset[2] - 1, self.offset[2] + 1], dtype=np.float64)
 
     def get_offset(self):
         return self.offset
@@ -66,11 +58,15 @@ class Window:
         self.update_orientation_vectors()
 
     def set_zoom(self, factor):
-        factor = np.clip(factor, Window.MIN_ZOOM, Window.MAX_ZOOM)
+        if factor >= Window.MAX_ZOOM:
+            factor = Window.MAX_ZOOM
+
+        if factor <= Window.MIN_ZOOM:
+            factor = Window.MIN_ZOOM
+
         self.zoom_factor = factor
         self.width = self.initial_width * factor
         self.height = self.initial_height * factor
-        self.depth = self.initial_depth * factor
 
     def zoom_in(self, selected_zoom_factor):
         self.set_zoom(self.zoom_factor - selected_zoom_factor / 100)
