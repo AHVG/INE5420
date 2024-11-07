@@ -138,11 +138,10 @@ class Transformation3D(Transformation):
         
         axl_angle = 54.74   #axl_angle é 54.74 pois o eixo de rotação possui o mesmo valor em todas as coordenadas
         rotation_matrix = x_rotation(self.matrix, axl_angle)
-        rotation_matrix = y_rotation(rotation_matrix, axl_angle)
         rotation_matrix = z_rotation(rotation_matrix, axl_angle)
         rotation_matrix = y_rotation(rotation_matrix, angle)
         rotation_matrix = z_rotation(rotation_matrix, -axl_angle)
-        rotation_matrix = x_rotation(self.matrix, -axl_angle)
+        rotation_matrix = x_rotation(rotation_matrix, -axl_angle)
 
         self.matrix = self.matrix @ rotation_matrix
         self.translation(reference)

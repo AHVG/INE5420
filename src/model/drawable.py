@@ -78,6 +78,9 @@ class Drawable(Exportable, Importable):
             self.points[i] = np.asarray(transformed_point)[0,:-1]
         return self
     
+    def get_center(self):
+        return np.mean(self.points, axis=0)
+    
     def draw(self, canvas):
         pass
 
@@ -356,8 +359,6 @@ class BSpline(Curve2D):
             points.extend(self.fwdDiff(n, fx, dfx, d2fx, d3fx, fy, dfy, d2fy, d3fy))
             
         return points
-<<<<<<< Updated upstream
-=======
 
 
 class Object3D(Drawable):
@@ -384,4 +385,3 @@ class Point3D(Object3D):
     def clip(self, window_clip):
         return PointClipping(window_clip).clip(self)
     
->>>>>>> Stashed changes
