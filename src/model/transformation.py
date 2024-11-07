@@ -133,7 +133,6 @@ class Transformation3D(Transformation):
         center = self.object3d.get_center()
         reference = center if reference is None else reference
         reference = np.array([reference[0], reference[1], reference[2], 1], dtype=np.float64)
-        print(reference)
         self.translation(-reference)
         
         axl_angle = 54.74   #axl_angle é 54.74 pois o eixo de rotação possui o mesmo valor em todas as coordenadas

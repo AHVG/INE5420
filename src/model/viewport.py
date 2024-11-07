@@ -10,7 +10,6 @@ class Viewport:
     def transform(self, drawable):
         drawable = drawable.copy()
 
-        print(drawable.get_center())
         drawable = Transformation3D(drawable).rotation(\
                    np.radians(self.window.angle), self.window.get_offset()).apply()
 
