@@ -21,6 +21,12 @@ class Controller:
     def rotate_right(self, angle):
         self.window.increase_angle(angle)
 
+    def rotate_up(self, angle):
+        self.window.increase_angle(angle)
+
+    def rotate_down(self, angle):
+        self.window.increase_angle(angle)
+
     def zoom_out(self, factor):
         self.window.zoom_out(factor)
 
@@ -39,6 +45,12 @@ class Controller:
     def move_right(self):
         self.window.move_right()
     
+    def move_forward(self):
+        self.window.move_forward()
+
+    def move_backward(self):
+        self.window.move_backward()
+
     def create_point(self, name, x1, y1, color):
         self.display_file.add_object(Point(name, [(x1, y1)], color))
 

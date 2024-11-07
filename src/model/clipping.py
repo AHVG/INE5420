@@ -17,7 +17,7 @@ class Clipping(ABC):
 class PointClipping(Clipping):
 
     def clip(self, point):
-        x, y = point.points[0]
+        x, y, z = point.points[0]
         if self.xmin <= x <= self.xmax and self.ymin <= y <= self.ymax:
             return point
         return None
