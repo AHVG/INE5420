@@ -76,8 +76,6 @@ class Transformation2D(Transformation):
     
     def apply(self):
         return self.drawable @ self.matrix
-<<<<<<< Updated upstream
-=======
 
 
 class Transformation3D(Transformation):
@@ -171,4 +169,3 @@ class Transformation3D(Transformation):
     
     def apply(self):
         return self.object3d @ self.matrix
->>>>>>> Stashed changes
