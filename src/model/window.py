@@ -4,7 +4,7 @@ import numpy as np
 class Window:
 
     INITIAL_ANGLE = 0.0
-    INITIAL_OFFSET = np.array([0, 0], dtype=np.float64)
+    INITIAL_OFFSET = np.array([0, 0, 0], dtype=np.float64)
     INITIAL_ZOOM_FACTOR = 1.0
 
     MAX_ZOOM = 4.0
@@ -50,28 +50,28 @@ class Window:
         mod = -0.01 * self.height
         x = mod * np.cos(np.radians(-self.angle - 90))
         y = mod * np.sin(np.radians(-self.angle - 90))
-        offset = [x,y]
+        offset = [x, y, 0]
         self.increase_offset(offset)
 
     def move_down(self):
         mod = 0.01 * self.height
         x = mod * np.cos(np.radians(-self.angle - 90))
         y = mod * np.sin(np.radians(-self.angle - 90))
-        offset = [x,y]
+        offset = [x, y, 0]
         self.increase_offset(offset)
 
     def move_left(self):
         mod = -0.01 * self.width
         x = mod * np.cos(np.radians(-self.angle))
         y = mod * np.sin(np.radians(-self.angle))
-        offset = [x,y]
+        offset = [x, y, 0]
         self.increase_offset(offset)
 
     def move_right(self):
         mod = 0.01 * self.width
         x = mod * np.cos(np.radians(-self.angle))
         y = mod * np.sin(np.radians(-self.angle))
-        offset = [x,y]
+        offset = [x, y, 0]
         self.increase_offset(offset)
 
     def increase_angle(self, angle):

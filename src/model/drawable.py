@@ -59,21 +59,9 @@ class Drawable(Exportable, Importable):
 
         return vertices, obj, mtl, offset + len(self.points)
 
-    def transform(self, window, viewport):
-        points = []
-
-        for point in self.points:
-            window_bounds = window.get_bounds()
-            x_viewport = ((point[0] - window_bounds[0]) / (window_bounds[1] - window_bounds[0])) * (viewport.bounds[1] - viewport.bounds[0])
-            y_viewport = (1 - (point[1] - window_bounds[2]) / (window_bounds[3] - window_bounds[2])) * (viewport.bounds[3] - viewport.bounds[2])
-            points.append([x_viewport, y_viewport])        
-
-        drawable = self.copy(points=points)
-        return drawable
-
     def __matmul__(self, matrix):
         for i, point in enumerate(self.points):
-            point_3d = np.array([point[0], point[1], 1.0], dtype=np.float64)
+            point_3d = np.array([point[0], point[1], point[2], 1.0], dtype=np.float64)
             transformed_point = point_3d @ matrix
             self.points[i] = np.asarray(transformed_point)[0,:-1]
         return self
@@ -167,38 +155,11 @@ class Curve2D(Drawable):
 
     def __matmul__(self, matrix):
         for i, point in enumerate(self.points):
-            point_3d = np.array([point[0], point[1], 1.0], dtype=np.float64)
+            point_3d = np.array([point[0], point[1], point[2], 1.0], dtype=np.float64)
             transformed_point = point_3d @ matrix
             self.points[i] = np.asarray(transformed_point)[0,:-1]
 
-        # if self.control_points is not None:
-        #     for i, point in enumerate(self.control_points):
-        #         point_3d = np.array([point[0], point[1], 1.0], dtype=np.float64)
-        #         transformed_point = point_3d @ matrix
-        #         self.control_points[i] = np.asarray(transformed_point)[0,:-1]
-
         return self
-
-    def transform(self, window, viewport):
-        points = []
-
-        for point in self.points:
-            window_bounds = window.get_bounds()
-            x_viewport = ((point[0] - window_bounds[0]) / (window_bounds[1] - window_bounds[0])) * (viewport.bounds[1] - viewport.bounds[0])
-            y_viewport = (1 - (point[1] - window_bounds[2]) / (window_bounds[3] - window_bounds[2])) * (viewport.bounds[3] - viewport.bounds[2])
-            points.append([x_viewport, y_viewport])  
-        
-        # control_points = []
-        # if self.control_points is not None:    
-        #     for control_point in self.control_points:
-        #         window_bounds = window.get_bounds()
-        #         x_viewport = ((control_point[0] - window_bounds[0]) / (window_bounds[1] - window_bounds[0])) * (viewport.bounds[1] - viewport.bounds[0])
-        #         y_viewport = (1 - (control_point[1] - window_bounds[2]) / (window_bounds[3] - window_bounds[2])) * (viewport.bounds[3] - viewport.bounds[2])
-        #         control_points.append([x_viewport, y_viewport])
-
-        # drawable = self.copy(points=points, control_points=control_points)
-        drawable = self.copy(points=points)
-        return drawable
 
     def draw(self, canvas):
         sections = self.split_points()
@@ -207,11 +168,6 @@ class Curve2D(Drawable):
                 i += 1
                 prev_point = points[i - 1]
                 canvas.create_line(prev_point[0], prev_point[1], point[0], point[1], fill=self.color, width=2)
-
-        # if self.control_points is not None:
-        #     for point in self.control_points:
-        #         x, y = point[0], point[1]
-        #         canvas.create_oval(x-2, y-2, x+2, y+2, fill=self.color, outline=self.color)
 
     def clip(self, window_clip):
         new_points = []
@@ -228,17 +184,7 @@ class Curve2D(Drawable):
                 new_points.append(line.points[1])
             else:
                 self.section_indexes.append(j)
-        
-        # if self.control_points is not None:
-        #     new_control_points = []
-        #     clipping = PointClipping(window_clip)
-        #     for point in self.control_points:
-        #         point = Point("teste", [point])
-        #         point = clipping.clip(point)
-        #         if point:
-        #             new_control_points.append(point.points[0])
-        # else:
-        #     new_control_points = None
+
         new_control_points = []
 
         return self.__class__(self.name, new_points, new_control_points, self.section_indexes, precision=self.precision, color=self.color)
@@ -280,27 +226,6 @@ class Bezier(Curve2D):
 
 
 class BSpline(Curve2D):
-        
-    # def calculate_bspline(self, p0, p1, p2, p3):
-    #     points = []
-    #     step = 1 / self.precision
-    #     for t in np.arange(0, 1 + step, step):
-    #         t2 = t * t
-    #         t3 = t2 * t
-
-    #         # Calculando os coeficientes das funções B-Spline cúbicas
-    #         b0 = (-t3 + 3 * t2 - 3 * t + 1) / 6.0
-    #         b1 = (3 * t3 - 6 * t2 + 4) / 6.0
-    #         b2 = (-3 * t3 + 3 * t2 + 3 * t + 1) / 6.0
-    #         b3 = t3 / 6.0
-
-    #         # Calculando as coordenadas x e y dos pontos da curva B-Spline
-    #         x = b0 * p0[0] + b1 * p1[0] + b2 * p2[0] + b3 * p3[0]
-    #         y = b0 * p0[1] + b1 * p1[1] + b2 * p2[1] + b3 * p3[1]
-
-    #         points.append((x, y))
-
-    #     return points
     
     def fwdDiff(self, n, x, dx, d2x, d3x, y, dy, d2y, d3y):
         points = []
