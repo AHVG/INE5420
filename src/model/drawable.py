@@ -204,7 +204,8 @@ class Bezier(Curve2D):
             t /= 100.0
             x = p1[0] * (-t**3 + 3.0 * t**2 - 3.0 * t + 1) + p2[0] * (3.0 * t**3 - 6.0 * t**2 + 3.0 * t) + p3[0] * (-3.0 * t**3 + 3.0 * t**2) + p4[0] * t**3
             y = p1[1] * (-t**3 + 3.0 * t**2 - 3.0 * t + 1) + p2[1] * (3.0 * t**3 - 6.0 * t**2 + 3.0 * t) + p3[1] * (-3.0 * t**3 + 3.0 * t**2) + p4[1] * t**3
-            points.append((x, y))
+            z = 0
+            points.append((x, y, z))
 
         return points
 
@@ -227,9 +228,9 @@ class Bezier(Curve2D):
 
 class BSpline(Curve2D):
     
-    def fwdDiff(self, n, x, dx, d2x, d3x, y, dy, d2y, d3y):
+    def fwdDiff(self, n, x, dx, d2x, d3x, y, dy, d2y, d3y, z=0):
         points = []
-        old_x, old_y = x, y
+        old_x, old_y, old_z = x, y, z
 
         for _ in range(n):
             x += dx
@@ -240,11 +241,11 @@ class BSpline(Curve2D):
             dy += d2y
             d2y += d3y
 
-            points.append((old_x, old_y))
+            points.append((old_x, old_y, old_z))
 
-            old_x, old_y = x, y
+            old_x, old_y, old_z = x, y, z
         
-        points.append((old_x, old_y))
+        points.append((old_x, old_y, old_z))
         return points
 
     def calculate_points(self):

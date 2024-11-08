@@ -22,8 +22,6 @@ class View(BaseUIComponent):
         super().__init__(controller)
     
     def configure(self):
-        self.last_mouse_position = None
-
         self.main_frame = tk.Frame(self.root, bg="lightgray")
         self.main_frame.pack(fill=tk.BOTH, expand=True)
 
@@ -52,16 +50,6 @@ class View(BaseUIComponent):
         self.draw_canvas()
     
     def register_events(self):
-        self.canvas.bind("<Shift-B1-Motion>", self.move)
-        self.canvas.bind("<ButtonRelease-1>", self.reset_move)
-
-        self.canvas.bind("<MouseWheel>", self.zoom)  # Windows
-        self.canvas.bind("<Button-4>", lambda _: self.zoom_in())  # Linux (scroll up)
-        self.canvas.bind("<Button-5>", lambda _: self.zoom_out())  # Linux (scroll down)
-
-        self.canvas.bind("<Shift-MouseWheel>", self.rotate)  # Windows
-        self.canvas.bind("<Shift-Button-4>", lambda _: self.rotate_right())  # Linux (scroll up com Shift)
-        self.canvas.bind("<Shift-Button-5>", lambda _: self.rotate_left())  # Linux (scroll down com Shift)
 
         self.root.bind("<Delete>", lambda _: self.remove_objects())
         
@@ -80,9 +68,15 @@ class View(BaseUIComponent):
         self.left_button.config(command=self.move_left)
         self.right_button.config(command=self.move_right)
         self.down_button.config(command=self.move_down)
+        self.forward_button.config(command=self.move_forward)
+        self.backward_button.config(command=self.move_backward)
 
         self.rotate_left_button.config(command=self.rotate_left)
         self.rotate_right_button.config(command=self.rotate_right)
+        self.rotate_up_button.config(command=self.rotate_up)
+        self.rotate_down_button.config(command=self.rotate_down)
+        self.rotate_clockwise_button.config(command=self.rotate_clockwise)
+        self.rotate_counterclockwise_button.config(command=self.rotate_counterclockwise)
 
         self.point_create_button.config(command=lambda: WindowToCreatePoint(self, self.controller, self.canvas))
         self.line_create_button.config(command=lambda: WindowToCreateLine(self, self.controller, self.canvas))
@@ -166,6 +160,12 @@ class View(BaseUIComponent):
 
         self.down_button = tk.Button(self.directions_buttons, text="Down", width=7)
         self.down_button.grid(row=2, column=1, padx=5, pady=5)
+        
+        self.forward_button = tk.Button(self.directions_buttons, text="forward", width=7)
+        self.forward_button.grid(row=3, column=0, padx=5, pady=5)
+
+        self.backward_button = tk.Button(self.directions_buttons, text="backward", width=7)
+        self.backward_button.grid(row=3, column=2, padx=5, pady=5)
 
         self.window_rotation_buttons = tk.Frame(self.nav_frame, bg="lightgray")
         self.window_rotation_buttons.grid(row=4, column=0, padx=10, pady=10)
@@ -175,6 +175,18 @@ class View(BaseUIComponent):
 
         self.rotate_right_button = tk.Button(self.window_rotation_buttons, text="Rotate Right")
         self.rotate_right_button.grid(row=0, column=1, padx=5, pady=10)
+
+        self.rotate_up_button = tk.Button(self.window_rotation_buttons, text="Rotate Up")
+        self.rotate_up_button.grid(row=1, column=0, padx=5, pady=10)
+
+        self.rotate_down_button = tk.Button(self.window_rotation_buttons, text="Rotate Down")
+        self.rotate_down_button.grid(row=1, column=1, padx=5, pady=10)
+
+        self.rotate_clockwise_button = tk.Button(self.window_rotation_buttons, text="Rotate Clockwise")
+        self.rotate_clockwise_button.grid(row=2, column=0, padx=5, pady=10)
+
+        self.rotate_counterclockwise_button = tk.Button(self.window_rotation_buttons, text="Rotate Counterclockwise")
+        self.rotate_counterclockwise_button.grid(row=2, column=1, padx=5, pady=10)
 
         self.rotation_angle = tk.Label(self.window_rotation_buttons, bg="lightgray", text="Angle:")
         self.rotation_angle.grid(row=0, column=3, padx=5, pady=5)
@@ -223,28 +235,7 @@ class View(BaseUIComponent):
         self.controller.remove_objects(index)
         self.draw_canvas()
         self.update_objects_list()
-    
-    def move(self, event):
-        if self.last_mouse_position is None:
-            self.last_mouse_position = (event.x, event.y)
 
-        dx = event.x - self.last_mouse_position[0]
-        dy = event.y - self.last_mouse_position[1]
-        self.last_mouse_position = (event.x, event.y)
-
-        if dx > 0:
-            self.move_left()
-        elif dx < 0:
-            self.move_right()
-
-        if dy > 0:
-            self.move_up()
-        elif dy < 0:
-            self.move_down()
-
-    def reset_move(self, _):
-        self.last_mouse_position = None
-    
     def move_up(self):
         self.log_message("Moving window up")
         self.controller.move_up()
@@ -263,6 +254,16 @@ class View(BaseUIComponent):
     def move_right(self):
         self.log_message("Moving window right")
         self.controller.move_right()
+        self.draw_canvas()
+    
+    def move_forward(self):
+        self.log_message("Moving window forward")
+        self.controller.move_forward()
+        self.draw_canvas()
+    
+    def move_backward(self):
+        self.log_message("Moving window backward")
+        self.controller.move_backward()
         self.draw_canvas()
 
     def zoom(self, event):
@@ -294,12 +295,6 @@ class View(BaseUIComponent):
             self.log_message(f"Zoom out using {factor}% zoom factor")
             self.controller.zoom_out(factor)
             self.draw_canvas()
-    
-    def rotate(self, event):
-        if event.delta > 0:
-            self.rotate_right()
-        elif event.delta < 0:
-            self.rotate_left()
 
     def rotate_left(self):
         try:
@@ -323,6 +318,54 @@ class View(BaseUIComponent):
         else:
             self.log_message(f"Right rotation using {angle}° angle")
             self.controller.rotate_right(angle)
+            self.draw_canvas()
+
+    def rotate_up(self):
+        try:
+            angle = float(self.rotation_angle_entry_value.get())
+        except:
+            self.log_message("Invalid angle, try float values")
+            self.rotation_angle_entry_value.delete(0, tk.END)
+            self.rotation_angle_entry_value.insert(0, "5")
+        else:
+            self.log_message(f"Up rotation using {angle}° angle")
+            self.controller.rotate_up(angle)
+            self.draw_canvas()
+    
+    def rotate_down(self):
+        try:
+            angle = float(self.rotation_angle_entry_value.get())
+        except:
+            self.log_message("Invalid angle, try float values")
+            self.rotation_angle_entry_value.delete(0, tk.END)
+            self.rotation_angle_entry_value.insert(0, "5")
+        else:
+            self.log_message(f"Down rotation using {angle}° angle")
+            self.controller.rotate_down(angle)
+            self.draw_canvas()
+
+    def rotate_clockwise(self):
+        try:
+            angle = float(self.rotation_angle_entry_value.get())
+        except:
+            self.log_message("Invalid angle, try float values")
+            self.rotation_angle_entry_value.delete(0, tk.END)
+            self.rotation_angle_entry_value.insert(0, "5")
+        else:
+            self.log_message(f"Clockwise rotation using {angle}° angle")
+            self.controller.rotate_clockwise(angle)
+            self.draw_canvas()
+    
+    def rotate_counterclockwise(self):
+        try:
+            angle = float(self.rotation_angle_entry_value.get())
+        except:
+            self.log_message("Invalid angle, try float values")
+            self.rotation_angle_entry_value.delete(0, tk.END)
+            self.rotation_angle_entry_value.insert(0, "5")
+        else:
+            self.log_message(f"Counterclockwise rotation using {angle}° angle")
+            self.controller.rotate_counterclockwise(angle)
             self.draw_canvas()
 
     def import_world(self):

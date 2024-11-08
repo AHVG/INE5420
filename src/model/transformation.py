@@ -154,6 +154,7 @@ class Transformation3D(Transformation):
         :param axis: Vetor 3D representando o eixo de rotação.
         :param reference: Ponto de referência para a rotação.
         """
+        angle = -angle
         # Normalizar o vetor eixo
         axis = np.array(axis, dtype=np.float64)
         axis = axis / np.linalg.norm(axis)  # Normaliza para garantir que o eixo seja unitário
