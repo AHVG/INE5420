@@ -16,16 +16,22 @@ class Controller:
         self.transformation = None
 
     def rotate_left(self, angle):
-        self.window.increase_angle(-angle)
+        self.window.rotate_xy(-angle)
     
     def rotate_right(self, angle):
-        self.window.increase_angle(angle)
+        self.window.rotate_xy(angle)
 
     def rotate_up(self, angle):
-        self.window.increase_angle(angle)
+        self.window.rotate_yz(-angle)
 
     def rotate_down(self, angle):
-        self.window.increase_angle(angle)
+        self.window.rotate_yz(angle)
+
+    def panoramic_rotation_left(self, angle):
+        self.window.panoramic_rotation(angle)
+
+    def panoramic_rotation_right(self, angle):
+        self.window.panoramic_rotation(-angle)
 
     def zoom_out(self, factor):
         self.window.zoom_out(factor)

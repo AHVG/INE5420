@@ -37,7 +37,6 @@ class Window:
         self.width = self.initial_width
         self.height = self.initial_height
         self.depth = self.initial_depth
-        self.angle = 0.0
         self.zoom_factor = Window.INITIAL_ZOOM_FACTOR
         self.offset = np.array(Window.INITIAL_OFFSET, dtype=np.float64)
         self.vpn = np.array([0, 0, 1], dtype=np.float64)  # Vetor normal (view plane normal)
@@ -118,12 +117,25 @@ class Window:
         print(self.v_up)
         print(self.offset)
 
-    def increase_angle(self, angle):
+    def rotate_xy(self, angle):
         """
         Rotaciona a janela em torno do eixo v_right (pitch).
         """
-        self.angle += angle
         self.v_up = rotate_vector(self.v_up, self.v_right, angle)
+        self.normalize_orientation_vectors()
+
+    def rotate_yz(self, angle):
+        """
+        Rotaciona a janela em torno do eixo v_right (pitch).
+        """
+        self.vpn = rotate_vector(self.vpn, self.v_up, angle)
+        self.normalize_orientation_vectors()
+
+    def panoramic_rotation(self, angle):
+        """
+        Rotaciona a janela em torno do eixo v_right (pitch).
+        """
+        self.vpn = rotate_vector(self.vpn, self.v_right, angle)
         self.normalize_orientation_vectors()
 
     def set_aspect_ratio(self, aspect_ratio):

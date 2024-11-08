@@ -87,6 +87,8 @@ class View(BaseUIComponent):
         self.rotate_right_button.config(command=self.rotate_right)
         self.rotate_up_button.config(command=self.rotate_up)
         self.rotate_down_button.config(command=self.rotate_down)
+        self.panoramic_rotation_left_button.config(command=self.panoramic_rotation_left)
+        self.panoramic_rotation_right_button.config(command=self.panoramic_rotation_right)
 
         self.point_create_button.config(command=lambda: WindowToCreatePoint(self, self.controller, self.canvas))
         self.line_create_button.config(command=lambda: WindowToCreateLine(self, self.controller, self.canvas))
@@ -191,6 +193,12 @@ class View(BaseUIComponent):
 
         self.rotate_down_button = tk.Button(self.window_rotation_buttons, text="Rotate Down")
         self.rotate_down_button.grid(row=1, column=1, padx=5, pady=10)
+
+        self.panoramic_rotation_left_button = tk.Button(self.window_rotation_buttons, text="<--")
+        self.panoramic_rotation_left_button.grid(row=1, column=2, padx=5, pady=10)
+
+        self.panoramic_rotation_right_button = tk.Button(self.window_rotation_buttons, text="-->")
+        self.panoramic_rotation_right_button.grid(row=1, column=3, padx=5, pady=10)
 
         self.rotation_angle = tk.Label(self.window_rotation_buttons, bg="lightgray", text="Angle:")
         self.rotation_angle.grid(row=0, column=3, padx=5, pady=5)
@@ -373,6 +381,30 @@ class View(BaseUIComponent):
         else:
             self.log_message(f"Down rotation using {angle}° angle")
             self.controller.rotate_down(angle)
+            self.draw_canvas()
+
+    def panoramic_rotation_left(self):
+        try:
+            angle = float(self.rotation_angle_entry_value.get())
+        except:
+            self.log_message("Invalid angle, try float values")
+            self.rotation_angle_entry_value.delete(0, tk.END)
+            self.rotation_angle_entry_value.insert(0, "5")
+        else:
+            self.log_message(f"Panoramic left rotation using {angle}° angle")
+            self.controller.panoramic_rotation_left(angle)
+            self.draw_canvas()
+
+    def panoramic_rotation_right(self):
+        try:
+            angle = float(self.rotation_angle_entry_value.get())
+        except:
+            self.log_message("Invalid angle, try float values")
+            self.rotation_angle_entry_value.delete(0, tk.END)
+            self.rotation_angle_entry_value.insert(0, "5")
+        else:
+            self.log_message(f"Panoramic right rotation using {angle}° angle")
+            self.controller.panoramic_rotation_right(angle)
             self.draw_canvas()
 
     def import_world(self):
