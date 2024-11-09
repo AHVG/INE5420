@@ -51,27 +51,27 @@ class Window:
         self.set_zoom(self.zoom_factor + selected_zoom_factor/100)
 
     def move_up(self):
-        offset = self.vpu * 0.01 * self.height
+        offset = self.vpu * 5
         self.increase_offset(offset)
 
     def move_down(self):
-        offset = -self.vpu * 0.01 * self.height
+        offset = -self.vpu * 5
         self.increase_offset(offset)
 
     def move_left(self):
-        offset = -self.vpr * 0.01 * self.width
+        offset = -self.vpr * 5
         self.increase_offset(offset)
 
     def move_right(self):
-        offset = self.vpr * 0.01 * self.width
+        offset = self.vpr * 5
         self.increase_offset(offset)
 
     def move_forward(self):
-        offset = self.vpn * 0.1 * self.zoom_factor
+        offset = self.vpn * 5
         self.increase_offset(offset)
 
     def move_backward(self):
-        offset = -self.vpn * 0.1 * self.zoom_factor
+        offset = -self.vpn * 5
         self.increase_offset(offset)
 
     def rotate(self, v, angle, axis):
@@ -91,44 +91,42 @@ class Window:
         return rotation_matrix @ v
     
     def rotate_right(self, angle):
-        # Rotaciona `vpn` e `vpu` em torno do eixo `vpu` (movimento horizontal)
         self.vpn = self.rotate(self.vpn, angle, self.vpu)
         self.vpr = self.rotate(self.vpr, angle, self.vpu)
 
     def rotate_left(self, angle):
-        # Rotaciona `vpn` e `vpu` em torno do eixo `-vpu` (movimento horizontal)
         self.vpn = self.rotate(self.vpn, -angle, self.vpu)
         self.vpr = self.rotate(self.vpr, -angle, self.vpu)
 
     def rotate_up(self, angle):
-        # Rotaciona `vpn` e `vpr` em torno do eixo `vpr` (movimento vertical)
         self.vpn = self.rotate(self.vpn, angle, self.vpr)
         self.vpu = self.rotate(self.vpu, angle, self.vpr)
 
     def rotate_down(self, angle):
-        # Rotaciona `vpn` e `vpr` em torno do eixo `-vpr` (movimento vertical)
         self.vpn = self.rotate(self.vpn, -angle, self.vpr)
         self.vpu = self.rotate(self.vpu, -angle, self.vpr)
 
     def rotate_clockwise(self, angle):
-        # Rotaciona `vpr` e `vpu` em torno do eixo `vpn` (rotação em torno da direção de visão)
         self.vpr = self.rotate(self.vpr, angle, self.vpn)
         self.vpu = self.rotate(self.vpu, angle, self.vpn)
 
     def rotate_counterclockwise(self, angle):
-        # Rotaciona `vpr` e `vpu` em torno do eixo `-vpn` (rotação em torno da direção de visão)
         self.vpr = self.rotate(self.vpr, -angle, self.vpn)
         self.vpu = self.rotate(self.vpu, -angle, self.vpn)
 
     def get_vpn_angles(self):
-        # Normaliza o VPN para garantir que estamos trabalhando com um vetor unitário
         vpn_norm = self.vpn / np.linalg.norm(self.vpn)
+        theta_x = np.arctan2(vpn_norm[1], vpn_norm[2])
+        theta_y = np.arctan2(vpn_norm[0], vpn_norm[2])
 
-        # Ângulo em relação ao eixo Y para alinhar o VPN no plano XZ (rotações ao redor do eixo X)
-        theta_x = np.arctan2(vpn_norm[2], vpn_norm[1])
+        print()
+        print("Vetores")
+        print("VPN:", self.vpn)
+        print("VPN Normalizado:", vpn_norm)
 
-        # Ângulo em relação ao eixo X para alinhar o VPN no plano YZ (rotações ao redor do eixo Y)
-        theta_y = np.arctan2(vpn_norm[0], np.sqrt(vpn_norm[1]**2 + vpn_norm[2]**2))
+        print("Ângulos (em graus)")
+        print("theta_x:", theta_x)
+        print("theta_y:", theta_y)
 
         return theta_x, theta_y
 

@@ -102,11 +102,6 @@ class Transformation3D(Transformation):
         return self
 
     def rotation(self, angles, reference=None):
-        """
-        Aplica rotações em torno dos eixos x, y, e z em relação a um ponto de referência.
-        :param angles: Uma lista ou tupla com os ângulos de rotação (em radianos) para os eixos x, y, z.
-        :param reference: Ponto de referência para a rotação.
-        """
         rx, ry, rz = angles
         center = self.get_center(self.drawable)
         reference = center if reference is None else reference
@@ -148,12 +143,6 @@ class Transformation3D(Transformation):
         return self
     
     def rotation_relative_to_axis(self, angle, axis, reference=None):
-        """
-        Aplica uma rotação em torno de um eixo arbitrário em relação a um ponto de referência.
-        :param angle: Ângulo de rotação em radianos.
-        :param axis: Vetor 3D representando o eixo de rotação.
-        :param reference: Ponto de referência para a rotação.
-        """
         angle = -angle
         # Normalizar o vetor eixo
         axis = np.array(axis, dtype=np.float64)

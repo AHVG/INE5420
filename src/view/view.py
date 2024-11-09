@@ -406,6 +406,12 @@ class View(BaseUIComponent):
         self.controller.set_line_clipping_method(self.radio_button_entry_value.get())
     
     def draw_canvas(self):
+        print()
+        print("Offset: ", self.controller.window.offset)
+        print("VPN: ", self.controller.window.vpn)
+        print("VPR: ", self.controller.window.vpr)
+        print("VPU: ", self.controller.window.vpu)
+    
         self.canvas.setup()
         for o in self.controller.display_file.objects:
             o = self.controller.viewport.transform(o)
