@@ -17,7 +17,7 @@ class Clipping(ABC):
 class PointClipping(Clipping):
 
     def clip(self, point):
-        x, y = point.points[0]
+        x, y, _ = point.points[0]
         if self.xmin <= x <= self.xmax and self.ymin <= y <= self.ymax:
             return point
         return None
@@ -36,8 +36,8 @@ class LineClipping(Clipping):
 
     def liang_barsky(self, line):
         from model.drawable import Line
-        x0, y0 = line.points[0]
-        x1, y1 = line.points[1]
+        x0, y0, _ = line.points[0]
+        x1, y1, _ = line.points[1]
         dx = x1 - x0
         dy = y1 - y0
         p = [-dx, dx, -dy, dy]
@@ -59,14 +59,14 @@ class LineClipping(Clipping):
         if u1 > u2:
             return None
 
-        clipped_start = [x0 + u1 * dx, y0 + u1 * dy]
-        clipped_end = [x0 + u2 * dx, y0 + u2 * dy]
+        clipped_start = [x0 + u1 * dx, y0 + u1 * dy, 0]
+        clipped_end = [x0 + u2 * dx, y0 + u2 * dy, 0]
         return Line(name=line.name + "_clipped", points=[clipped_start, clipped_end], color=line.color)
 
     def nicholl_lee_nicholl(self, line):
         from model.drawable import Line
-        x0, y0 = line.points[0]
-        x1, y1 = line.points[1]
+        x0, y0, _ = line.points[0]
+        x1, y1, _ = line.points[1]
 
         if self._point_in_window(x0, y0) and self._point_in_window(x1, y1):
             return line
@@ -115,7 +115,7 @@ class LineClipping(Clipping):
             x1 = clip_y(x0, x1, self.ymax)
             y1 = self.ymax
 
-        return Line(name=line.name + "_clipped", points=[[x0, y0], [x1, y1]], color=line.color)
+        return Line(name=line.name + "_clipped", points=[[x0, y0, 0], [x1, y1, 0]], color=line.color)
 
     def _point_in_window(self, x, y):
         return self.xmin <= x <= self.xmax and self.ymin <= y <= self.ymax
@@ -157,18 +157,18 @@ class WireframeClipping(Clipping):
             dy = p2[1] - p1[1]
             dx = p2[0] - p1[0]
             if dx == 0:
-                return np.array([p1[0], p1[1]])
+                return np.array([p1[0], p1[1], 0])
             slope = dy / dx
             y = p1[1] + slope * (boundary - p1[0])
-            return np.array([boundary, y])
+            return np.array([boundary, y, 0])
         elif clip_func == self._clip_bottom or clip_func == self._clip_top:
             dy = p2[1] - p1[1]
             dx = p2[0] - p1[0]
             if dy == 0:
-                return np.array([p1[0], p1[1]])
+                return np.array([p1[0], p1[1], 0])
             slope = dx / dy
             x = p1[0] + slope * (boundary - p1[1])
-            return np.array([x, boundary])
+            return np.array([x, boundary, 0])
 
     def _clip_left(self, vertex: np.ndarray, boundary: float) -> bool:
         return vertex[0] >= boundary
