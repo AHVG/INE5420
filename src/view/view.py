@@ -1,4 +1,5 @@
 import os
+import numpy as np
 import tkinter as tk
 
 from tkinter import filedialog
@@ -209,19 +210,19 @@ class View(BaseUIComponent):
         self.line_create_button.grid(row=0, column=1, padx=5, pady=5)
 
         self.wireframe_create_button = tk.Button(self.manipulation_frame, text="Create Wireframe",)
-        self.wireframe_create_button.grid(row=1, column=0, padx=5, pady=5)
+        self.wireframe_create_button.grid(row=0, column=2, padx=5, pady=5)
     
         self.bezier_create_button = tk.Button(self.manipulation_frame, text="Create Bezier",)
-        self.bezier_create_button.grid(row=1, column=1, padx=5, pady=5)
+        self.bezier_create_button.grid(row=0, column=3, padx=5, pady=5)
         
         self.bspline_create_button = tk.Button(self.manipulation_frame, text="Create BSpline",)
-        self.bspline_create_button.grid(row=2, column=0, padx=5, pady=5)
+        self.bspline_create_button.grid(row=1, column=0, padx=5, pady=5)
     
         self.objects_remove_button = tk.Button(self.manipulation_frame, text="Remove selected object",)
-        self.objects_remove_button.grid(row=3, column=0, padx=5, pady=5)
+        self.objects_remove_button.grid(row=1, column=1, padx=5, pady=5)
 
         self.apply_transformation = tk.Button(self.manipulation_frame, text="Apply transformation",)
-        self.apply_transformation.grid(row=3, column=1, padx=5, pady=5)
+        self.apply_transformation.grid(row=1, column=2, padx=5, pady=5)
     
     def remove_objects(self):
         index = self.objects_listbox.curselection()
@@ -406,6 +407,19 @@ class View(BaseUIComponent):
         self.controller.set_line_clipping_method(self.radio_button_entry_value.get())
     
     def draw_canvas(self):
+    
+        # angle_vpn_x, angle_vpn_y = self.controller.window.get_vpn_angles()
+        # t = self.controller.window.rotate(self.controller.window.vpn.copy(), angle_vpn_x, [1,0,0])
+        # t = self.controller.window.rotate(t, angle_vpn_y, [0,1,0])
+    
+        # print()
+        # print("Offset: ", self.controller.window.get_offset())
+        # print("UP: ", self.controller.window.vpu)
+        # print("Right: ", self.controller.window.vpr)
+        # print("VPN: ", self.controller.window.vpn)
+        # print("VPN arrumado: ", t)
+        # print("theta_x: ", np.degrees(angle_vpn_x))
+        # print("theta_y: ", np.degrees(angle_vpn_y))
     
         self.canvas.setup()
         for o in self.controller.display_file.objects:
