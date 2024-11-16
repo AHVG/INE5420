@@ -75,8 +75,8 @@ class View(BaseUIComponent):
         self.rotate_right_button.config(command=self.rotate_right)
         self.rotate_up_button.config(command=self.rotate_up)
         self.rotate_down_button.config(command=self.rotate_down)
-        self.rotate_clockwise_button.config(command=self.rotate_clockwise)
-        self.rotate_counterclockwise_button.config(command=self.rotate_counterclockwise)
+        # self.rotate_clockwise_button.config(command=self.rotate_clockwise)
+        # self.rotate_counterclockwise_button.config(command=self.rotate_counterclockwise)
 
         self.point_create_button.config(command=lambda: WindowToCreatePoint(self, self.controller, self.canvas))
         self.line_create_button.config(command=lambda: WindowToCreateLine(self, self.controller, self.canvas))
@@ -182,11 +182,11 @@ class View(BaseUIComponent):
         self.rotate_down_button = tk.Button(self.window_rotation_buttons, text="Rotate Down")
         self.rotate_down_button.grid(row=1, column=1, padx=5, pady=10)
 
-        self.rotate_clockwise_button = tk.Button(self.window_rotation_buttons, text="Rotate Clockwise")
-        self.rotate_clockwise_button.grid(row=2, column=0, padx=5, pady=10)
+        # self.rotate_clockwise_button = tk.Button(self.window_rotation_buttons, text="Rotate Clockwise")
+        # self.rotate_clockwise_button.grid(row=2, column=0, padx=5, pady=10)
 
-        self.rotate_counterclockwise_button = tk.Button(self.window_rotation_buttons, text="Rotate Counterclockwise")
-        self.rotate_counterclockwise_button.grid(row=2, column=1, padx=5, pady=10)
+        # self.rotate_counterclockwise_button = tk.Button(self.window_rotation_buttons, text="Rotate Counterclockwise")
+        # self.rotate_counterclockwise_button.grid(row=2, column=1, padx=5, pady=10)
 
         self.rotation_angle = tk.Label(self.window_rotation_buttons, bg="lightgray", text="Angle:")
         self.rotation_angle.grid(row=0, column=3, padx=5, pady=5)
@@ -406,11 +406,6 @@ class View(BaseUIComponent):
         self.controller.set_line_clipping_method(self.radio_button_entry_value.get())
     
     def draw_canvas(self):
-        print()
-        print("Offset: ", self.controller.window.offset)
-        print("VPN: ", self.controller.window.vpn)
-        print("VPR: ", self.controller.window.vpr)
-        print("VPU: ", self.controller.window.vpu)
     
         self.canvas.setup()
         for o in self.controller.display_file.objects:

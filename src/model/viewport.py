@@ -17,13 +17,21 @@ class Viewport:
         angle_vpn_x, angle_vpn_y = self.window.get_vpn_angles()
         t = self.window.rotate(self.window.vpn.copy(), angle_vpn_x, [1,0,0])
         t = self.window.rotate(t, angle_vpn_y, [0,1,0])
-        print("VPN rotacionado: ", t)
 
-        transformation = transformation.rotation_relative_to_axis(angle_vpn_x, [1,0,0], reference=(0,0,0))
-        transformation = transformation.rotation_relative_to_axis(angle_vpn_y, [0,1,0], reference=(0,0,0))
+        transformation = transformation.rotation_relative_to_axis(angle_vpn_x, [1,0,0], reference=vrp_offset)
+        transformation = transformation.rotation_relative_to_axis(angle_vpn_y, [0,1,0], reference=vrp_offset)
         transformation = transformation.escalation_relative_to_a_point([1/(self.window.width/2), 1/(self.window.height/2), 1], self.window.get_offset())
 
         drawable = transformation.apply()
+        
+        # print()
+        # print("Offset: ", vrp_offset)
+        # print("UP: ", self.window.vpu)
+        # print("Right: ", self.window.vpr)
+        # print("VPN: ", self.window.vpn)
+        # print("VPN arrumado: ", t)
+        # print("theta_x: ", np.degrees(angle_vpn_x))
+        # print("theta_y: ", np.degrees(angle_vpn_y))
 
         drawable = drawable.clip((self.window.get_bounds()[0] + 1/15, self.window.get_bounds()[2] + 1/15, self.window.get_bounds()[1] - 1/15, self.window.get_bounds()[3] - 1/15))
 

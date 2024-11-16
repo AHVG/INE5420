@@ -22,7 +22,6 @@ class Window:
         self.vpn = Window.INITIAL_VPN.copy()  # Define o vetor de visão inicial
         self.vpr = np.array([1, 0, 0], dtype=np.float64)
         self.vpu = np.array([0, 1, 0], dtype=np.float64)
-        
 
     def get_bounds(self):
         return np.array([self.offset[0] - 1, self.offset[0] + 1, self.offset[1] - 1, self.offset[1] + 1], dtype=np.float64)
@@ -67,11 +66,11 @@ class Window:
         self.increase_offset(offset)
 
     def move_forward(self):
-        offset = self.vpn * 5
+        offset = -self.vpn * 5
         self.increase_offset(offset)
 
     def move_backward(self):
-        offset = -self.vpn * 5
+        offset = self.vpn * 5
         self.increase_offset(offset)
 
     def rotate(self, v, angle, axis):
@@ -117,16 +116,7 @@ class Window:
     def get_vpn_angles(self):
         vpn_norm = self.vpn / np.linalg.norm(self.vpn)
         theta_x = np.arctan2(vpn_norm[1], vpn_norm[2])
-        theta_y = np.arctan2(vpn_norm[0], vpn_norm[2])
-
-        print()
-        print("Vetores")
-        print("VPN:", self.vpn)
-        print("VPN Normalizado:", vpn_norm)
-
-        print("Ângulos (em graus)")
-        print("theta_x:", theta_x)
-        print("theta_y:", theta_y)
+        theta_y = np.arctan2(vpn_norm[0], np.sqrt(vpn_norm[1]**2 + vpn_norm[2]**2))
 
         return theta_x, theta_y
 
