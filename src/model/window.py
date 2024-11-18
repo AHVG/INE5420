@@ -4,7 +4,7 @@ import numpy as np
 class Window:
 
     INITIAL_ANGLE = 0.0
-    INITIAL_OFFSET = np.array([0, 0, 0], dtype=np.float64)
+    INITIAL_OFFSET = np.array([0, 0, -200], dtype=np.float64)
     INITIAL_ZOOM_FACTOR = 1.0
     INITIAL_VPN = np.array([0, 0, 1], dtype=np.float64)  # Direção inicial do VPN
 
@@ -24,10 +24,13 @@ class Window:
         self.vpu = np.array([0, 1, 0], dtype=np.float64)
 
     def get_bounds(self):
-        return np.array([self.offset[0] - 1, self.offset[0] + 1, self.offset[1] - 1, self.offset[1] + 1], dtype=np.float64)
+        return np.array([-1, 1, -1, 1], dtype=np.float64)
 
     def get_offset(self):
         return self.offset
+    
+    def get_cop(self):
+        return np.array([0, 0, 800], dtype=np.float64)
     
     def increase_offset(self, offset):
         self.offset += np.array(offset, dtype=np.float64)
@@ -50,11 +53,11 @@ class Window:
         self.set_zoom(self.zoom_factor + selected_zoom_factor/100)
 
     def move_up(self):
-        offset = self.vpu * 5
+        offset = -self.vpu * 5
         self.increase_offset(offset)
 
     def move_down(self):
-        offset = -self.vpu * 5
+        offset = self.vpu * 5
         self.increase_offset(offset)
 
     def move_left(self):
@@ -66,11 +69,11 @@ class Window:
         self.increase_offset(offset)
 
     def move_forward(self):
-        offset = -self.vpn * 5
+        offset = self.vpn * 5
         self.increase_offset(offset)
 
     def move_backward(self):
-        offset = self.vpn * 5
+        offset = -self.vpn * 5
         self.increase_offset(offset)
 
     def rotate(self, v, angle, axis):

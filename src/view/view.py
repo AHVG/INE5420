@@ -402,29 +402,22 @@ class View(BaseUIComponent):
             self.radio_button_entry_value.insert(0, 'nicholl-lee-nicholl')
         else:
             self.radio_button_entry_value.insert(0, 'liang-barsky')
-        
+
         self.radio_button_entry_value.config(state='readonly')
         self.controller.set_line_clipping_method(self.radio_button_entry_value.get())
-    
+
     def draw_canvas(self):
-    
-        # angle_vpn_x, angle_vpn_y = self.controller.window.get_vpn_angles()
-        # t = self.controller.window.rotate(self.controller.window.vpn.copy(), angle_vpn_x, [1,0,0])
-        # t = self.controller.window.rotate(t, angle_vpn_y, [0,1,0])
-    
         # print()
         # print("Offset: ", self.controller.window.get_offset())
         # print("UP: ", self.controller.window.vpu)
         # print("Right: ", self.controller.window.vpr)
         # print("VPN: ", self.controller.window.vpn)
-        # print("VPN arrumado: ", t)
-        # print("theta_x: ", np.degrees(angle_vpn_x))
-        # print("theta_y: ", np.degrees(angle_vpn_y))
-    
+        self.log_message(f"offset {self.controller.window.get_offset()} up {self.controller.window.vpu} right {self.controller.window.vpr} vpn {self.controller.window.vpn}")
+
         self.canvas.setup()
         for o in self.controller.display_file.objects:
             o = self.controller.viewport.transform(o)
             if o:
                 o.draw(self.canvas)
-    
+
         self.canvas.debug()
