@@ -33,13 +33,17 @@ class Point3D(Object3D):
         self.ty = view_matrix[1][0]*x + view_matrix[1][1]*y + view_matrix[1][2]*z + view_matrix[1][3]
         self.tz = view_matrix[2][0]*x + view_matrix[2][1]*y + view_matrix[2][2]*z + view_matrix[2][3]
 
+    def is_visible(self):
+        """Verifica se o ponto está na frente do observador (z negativo)."""
+        return self.tz < 0
+
     def project(self, project_func):
         self.screen_x, self.screen_y = project_func(self.tx, self.ty, self.tz)
 
     def draw(self, canvas, clip_region):
         x_min, y_min, x_max, y_max = clip_region
         x, y = self.screen_x, self.screen_y
-        # Clipping para pontos: verificar se o ponto está dentro da região
+        # Clipping 2D para pontos
         if x_min <= x <= x_max and y_min <= y <= y_max:
             canvas.create_oval(x-3, y-3, x+3, y+3, fill=self.color)
 
@@ -54,6 +58,10 @@ class Line3D(Object3D):
         self.start.transform(view_matrix)
         self.end.transform(view_matrix)
 
+    def is_visible(self):
+        """Verifica se a linha está na frente do observador."""
+        return self.start.tz < 0 or self.end.tz < 0
+
     def project(self, project_func):
         self.start.project(project_func)
         self.end.project(project_func)
@@ -61,11 +69,48 @@ class Line3D(Object3D):
     def draw(self, canvas, clip_region):
         x1, y1 = self.start.screen_x, self.start.screen_y
         x2, y2 = self.end.screen_x, self.end.screen_y
-        # Aplicar o clipping usando o algoritmo Cohen-Sutherland
+        # Aplicar o clipping 2D usando o algoritmo Cohen-Sutherland
         clipped_line = cohen_sutherland_clip(x1, y1, x2, y2, clip_region)
         if clipped_line:
             x1_clipped, y1_clipped, x2_clipped, y2_clipped = clipped_line
             canvas.create_line(x1_clipped, y1_clipped, x2_clipped, y2_clipped, fill=self.color)
+
+class Polygon3D(Object3D):
+    """Classe para representar um polígono em 3D."""
+    def __init__(self, vertices, color='purple', fill_color=None):
+        self.vertices = vertices  # Lista de objetos Point3D
+        self.color = color
+        self.fill_color = fill_color  # Pode ser None ou uma string de cor
+
+    def transform(self, view_matrix):
+        for vertex in self.vertices:
+            vertex.transform(view_matrix)
+
+    def is_visible(self):
+        """Verifica se o polígono está na frente do observador."""
+        return any(v.tz < 0 for v in self.vertices)
+
+    def project(self, project_func):
+        for vertex in self.vertices:
+            vertex.project(project_func)
+
+    def draw(self, canvas, clip_region):
+        # Coleta as coordenadas projetadas dos vértices
+        points = []
+        for vertex in self.vertices:
+            x, y = vertex.screen_x, vertex.screen_y
+            points.append((x, y))
+
+        # Aplicar o algoritmo de clipping de Sutherland-Hodgman 2D
+        clipped_polygon = sutherland_hodgman_clip(points, clip_region)
+        if clipped_polygon:
+            # Converte a lista de pontos em uma lista plana de coordenadas
+            flat_points = [coord for point in clipped_polygon for coord in point]
+            if self.fill_color:
+                canvas.create_polygon(flat_points, fill=self.fill_color, outline=self.color)
+            else:
+                # Desenha apenas as arestas do polígono sem preenchimento
+                canvas.create_line(flat_points + flat_points[:2], fill=self.color)
 
 class BezierCurve3D(Object3D):
     """Classe para representar uma curva de Bézier em 3D."""
@@ -78,6 +123,10 @@ class BezierCurve3D(Object3D):
         for point in self.control_points:
             point.transform(view_matrix)
 
+    def is_visible(self):
+        """Verifica se a curva está na frente do observador."""
+        return any(p.tz < 0 for p in self.control_points)
+
     def project(self, project_func):
         # Avalia a curva de Bézier e projeta os pontos
         self.curve_points = []
@@ -86,8 +135,9 @@ class BezierCurve3D(Object3D):
         for i in range(steps + 1):
             t = i / steps
             x, y, z = self.de_casteljau(t)
-            screen_x, screen_y = project_func(x, y, z)
-            self.curve_points.append((screen_x, screen_y))
+            if z < 0:  # Clipping simples em Z
+                screen_x, screen_y = project_func(x, y, z)
+                self.curve_points.append((screen_x, screen_y))
 
     def de_casteljau(self, t):
         """Avalia a curva de Bézier usando o algoritmo de De Casteljau."""
@@ -110,7 +160,7 @@ class BezierCurve3D(Object3D):
         for i in range(len(self.curve_points) - 1):
             x0, y0 = self.curve_points[i]
             x1, y1 = self.curve_points[i + 1]
-            # Clipping para cada segmento da curva
+            # Clipping 2D para cada segmento da curva
             clipped_line = cohen_sutherland_clip(x0, y0, x1, y1, clip_region)
             if clipped_line:
                 x0_clipped, y0_clipped, x1_clipped, y1_clipped = clipped_line
@@ -135,6 +185,10 @@ class BSplineCurve3D(Object3D):
         for point in self.control_points:
             point.transform(view_matrix)
 
+    def is_visible(self):
+        """Verifica se a curva está na frente do observador."""
+        return any(p.tz < 0 for p in self.control_points)
+
     def project(self, project_func):
         # Avalia a curva B-spline e projeta os pontos
         self.curve_points = []
@@ -146,8 +200,9 @@ class BSplineCurve3D(Object3D):
         for i in range(steps + 1):
             u = u_min + (u_max - u_min) * i / steps
             x, y, z = self.de_boor(u)
-            screen_x, screen_y = project_func(x, y, z)
-            self.curve_points.append((screen_x, screen_y))
+            if z < 0:  # Clipping simples em Z
+                screen_x, screen_y = project_func(x, y, z)
+                self.curve_points.append((screen_x, screen_y))
 
     def de_boor(self, u):
         """Avalia a curva B-spline usando o algoritmo de De Boor."""
@@ -184,44 +239,11 @@ class BSplineCurve3D(Object3D):
         for i in range(len(self.curve_points) - 1):
             x0, y0 = self.curve_points[i]
             x1, y1 = self.curve_points[i + 1]
-            # Clipping para cada segmento da curva
+            # Clipping 2D para cada segmento da curva
             clipped_line = cohen_sutherland_clip(x0, y0, x1, y1, clip_region)
             if clipped_line:
                 x0_clipped, y0_clipped, x1_clipped, y1_clipped = clipped_line
                 canvas.create_line(x0_clipped, y0_clipped, x1_clipped, y1_clipped, fill=self.color)
-
-class Polygon3D(Object3D):
-    """Classe para representar um polígono em 3D."""
-    def __init__(self, vertices, color='purple', fill_color=None):
-        self.vertices = vertices  # Lista de objetos Point3D
-        self.color = color
-        self.fill_color = fill_color  # Pode ser None ou uma string de cor
-
-    def transform(self, view_matrix):
-        for vertex in self.vertices:
-            vertex.transform(view_matrix)
-
-    def project(self, project_func):
-        for vertex in self.vertices:
-            vertex.project(project_func)
-
-    def draw(self, canvas, clip_region):
-        # Coleta as coordenadas projetadas dos vértices
-        points = []
-        for vertex in self.vertices:
-            x, y = vertex.screen_x, vertex.screen_y
-            points.append((x, y))
-
-        # Aplicar o algoritmo de clipping de Sutherland-Hodgman
-        clipped_polygon = sutherland_hodgman_clip(points, clip_region)
-        if clipped_polygon:
-            # Converte a lista de pontos em uma lista plana de coordenadas
-            flat_points = [coord for point in clipped_polygon for coord in point]
-            if self.fill_color:
-                canvas.create_polygon(flat_points, fill=self.fill_color, outline=self.color)
-            else:
-                # Desenha apenas as arestas do polígono sem preenchimento
-                canvas.create_line(flat_points + flat_points[:2], fill=self.color)
 
 class Cone3D(Object3D):
     """Classe para representar um cone em 3D."""
@@ -265,6 +287,10 @@ class Cone3D(Object3D):
         for face in self.faces:
             face.transform(view_matrix)
 
+    def is_visible(self):
+        """Verifica se o cone está na frente do observador."""
+        return self.apex.tz < 0 or any(v.tz < 0 for v in self.base_vertices)
+
     def project(self, project_func):
         self.apex.project(project_func)
         self.base_center.project(project_func)
@@ -284,6 +310,7 @@ class Cone3D(Object3D):
 class Cube3D(Object3D):
     """Classe para representar um cubo em 3D."""
     def __init__(self, center, size, color='blue'):
+        self.size = size
         d = size / 2
         x, y, z = center.x, center.y, center.z
         self.color = color
@@ -298,36 +325,366 @@ class Cube3D(Object3D):
             Point3D(x + d, y + d, z - d),
             Point3D(x + d, y + d, z + d),
         ]
-        # Define as 12 arestas que conectam os vértices
-        self.edges = [
-            Line3D(self.vertices[0], self.vertices[1], self.color),
-            Line3D(self.vertices[0], self.vertices[2], self.color),
-            Line3D(self.vertices[0], self.vertices[4], self.color),
-            Line3D(self.vertices[1], self.vertices[3], self.color),
-            Line3D(self.vertices[1], self.vertices[5], self.color),
-            Line3D(self.vertices[2], self.vertices[3], self.color),
-            Line3D(self.vertices[2], self.vertices[6], self.color),
-            Line3D(self.vertices[3], self.vertices[7], self.color),
-            Line3D(self.vertices[4], self.vertices[5], self.color),
-            Line3D(self.vertices[4], self.vertices[6], self.color),
-            Line3D(self.vertices[5], self.vertices[7], self.color),
-            Line3D(self.vertices[6], self.vertices[7], self.color),
+        # Define as faces do cubo (como polígonos)
+        self.faces = [
+            Polygon3D([self.vertices[0], self.vertices[1], self.vertices[3], self.vertices[2]], color=self.color),
+            Polygon3D([self.vertices[4], self.vertices[5], self.vertices[7], self.vertices[6]], color=self.color),
+            Polygon3D([self.vertices[0], self.vertices[1], self.vertices[5], self.vertices[4]], color=self.color),
+            Polygon3D([self.vertices[2], self.vertices[3], self.vertices[7], self.vertices[6]], color=self.color),
+            Polygon3D([self.vertices[0], self.vertices[2], self.vertices[6], self.vertices[4]], color=self.color),
+            Polygon3D([self.vertices[1], self.vertices[3], self.vertices[7], self.vertices[5]], color=self.color),
         ]
 
     def transform(self, view_matrix):
         for vertex in self.vertices:
             vertex.transform(view_matrix)
+        for face in self.faces:
+            face.transform(view_matrix)
+
+    def is_visible(self):
+        """Verifica se o cubo está na frente do observador."""
+        return any(v.tz < 0 for v in self.vertices)
 
     def project(self, project_func):
         for vertex in self.vertices:
             vertex.project(project_func)
+        for face in self.faces:
+            face.project(project_func)
 
     def draw(self, canvas, clip_region):
-        for edge in self.edges:
-            edge.draw(canvas, clip_region)
-        # Opcional: desenhar os vértices do cubo
-        for vertex in self.vertices:
-            vertex.draw(canvas, clip_region)
+        for face in self.faces:
+            face.draw(canvas, clip_region)
+
+class BezierSurface3D(Object3D):
+    """Classe para representar uma superfície bicúbica de Bézier em 3D."""
+    def __init__(self, control_points_matrix, color='cyan', wireframe=True):
+        """
+        control_points_matrix: matriz 4x4 de pontos de controle (Point3D)
+        color: cor da superfície
+        wireframe: se True, desenha a malha; se False, preenche os polígonos
+        """
+        self.control_points = control_points_matrix  # Matriz 4x4 de pontos de controle
+        self.color = color
+        self.wireframe = wireframe
+        self.surface_points = []  # Pontos avaliados na superfície
+
+    def transform(self, view_matrix):
+        for row in self.control_points:
+            for point in row:
+                point.transform(view_matrix)
+
+    def is_visible(self):
+        """Verifica se a superfície está na frente do observador."""
+        return any(point.tz < 0 for row in self.control_points for point in row)
+
+    def project(self, project_func):
+        # Avalia a superfície de Bézier e projeta os pontos
+        self.surface_points = []
+        steps = 10  # Número de divisões na superfície
+        for i in range(steps + 1):
+            u = i / steps
+            row = []
+            for j in range(steps + 1):
+                v = j / steps
+                x, y, z = self.de_casteljau_surface(u, v)
+                if z < 0:  # Clipping simples em Z
+                    screen_x, screen_y = project_func(x, y, z)
+                    row.append((screen_x, screen_y))
+                else:
+                    row.append(None)
+            self.surface_points.append(row)
+
+    def de_casteljau_surface(self, u, v):
+        """Avalia a superfície bicúbica de Bézier usando o algoritmo de De Casteljau."""
+        # Primeiro, para cada linha de pontos de controle, avaliamos no parâmetro u
+        temp = []
+        for i in range(4):
+            points = [(p.tx, p.ty, p.tz) for p in self.control_points[i]]
+            temp.append(self.de_casteljau_curve(points, u))
+        # Depois, avaliamos a curva resultante no parâmetro v
+        x, y, z = self.de_casteljau_curve(temp, v)
+        return x, y, z
+
+    def de_casteljau_curve(self, points, t):
+        """Avalia uma curva de Bézier unidimensional usando o algoritmo de De Casteljau."""
+        n = len(points)
+        for r in range(1, n):
+            points = [
+                (
+                    (1 - t) * points[i][0] + t * points[i + 1][0],
+                    (1 - t) * points[i][1] + t * points[i + 1][1],
+                    (1 - t) * points[i][2] + t * points[i + 1][2],
+                )
+                for i in range(n - r)
+            ]
+        return points[0]
+
+    def draw(self, canvas, clip_region):
+        # Desenha a superfície como uma malha de linhas ou polígonos
+        steps = len(self.surface_points) - 1
+        for i in range(steps):
+            for j in range(steps):
+                p0 = self.surface_points[i][j]
+                p1 = self.surface_points[i][j + 1]
+                p2 = self.surface_points[i + 1][j + 1]
+                p3 = self.surface_points[i + 1][j]
+                # Verifica se os pontos estão visíveis
+                if None not in (p0, p1, p2, p3):
+                    if self.wireframe:
+                        # Desenha as arestas do quadrilátero
+                        lines = [
+                            (p0, p1),
+                            (p1, p2),
+                            (p2, p3),
+                            (p3, p0),
+                        ]
+                        for line in lines:
+                            x0, y0 = line[0]
+                            x1, y1 = line[1]
+                            clipped_line = cohen_sutherland_clip(x0, y0, x1, y1, clip_region)
+                            if clipped_line:
+                                x0_clipped, y0_clipped, x1_clipped, y1_clipped = clipped_line
+                                canvas.create_line(x0_clipped, y0_clipped, x1_clipped, y1_clipped, fill=self.color)
+                    else:
+                        # Desenha o quadrilátero preenchido
+                        polygon = [p0, p1, p2, p3]
+                        clipped_polygon = sutherland_hodgman_clip(polygon, clip_region)
+                        if clipped_polygon:
+                            flat_points = [coord for point in clipped_polygon for coord in point]
+                            canvas.create_polygon(flat_points, fill=self.color, outline='black')
+
+# Funções de transformação
+
+def translate_object(obj, dx, dy, dz):
+    """Translada um objeto modificando suas coordenadas diretamente."""
+    if isinstance(obj, Point3D):
+        obj.x += dx
+        obj.y += dy
+        obj.z += dz
+    elif isinstance(obj, Line3D):
+        translate_object(obj.start, dx, dy, dz)
+        translate_object(obj.end, dx, dy, dz)
+    elif isinstance(obj, Polygon3D):
+        for vertex in obj.vertices:
+            translate_object(vertex, dx, dy, dz)
+    elif isinstance(obj, BezierCurve3D) or isinstance(obj, BSplineCurve3D):
+        for point in obj.control_points:
+            translate_object(point, dx, dy, dz)
+    elif isinstance(obj, Cone3D):
+        translate_object(obj.apex, dx, dy, dz)
+        translate_object(obj.base_center, dx, dy, dz)
+        for vertex in obj.base_vertices:
+            translate_object(vertex, dx, dy, dz)
+    elif isinstance(obj, Cube3D):
+        for vertex in obj.vertices:
+            translate_object(vertex, dx, dy, dz)
+    elif isinstance(obj, BezierSurface3D):
+        for row in obj.control_points:
+            for point in row:
+                translate_object(point, dx, dy, dz)
+    else:
+        pass  # Para outros tipos de objetos
+
+def scale_object(obj, sx, sy, sz):
+    """Escalona um objeto modificando suas coordenadas diretamente."""
+    if isinstance(obj, Point3D):
+        obj.x *= sx
+        obj.y *= sy
+        obj.z *= sz
+    elif isinstance(obj, Line3D):
+        scale_object(obj.start, sx, sy, sz)
+        scale_object(obj.end, sx, sy, sz)
+    elif isinstance(obj, Polygon3D):
+        for vertex in obj.vertices:
+            scale_object(vertex, sx, sy, sz)
+    elif isinstance(obj, BezierCurve3D) or isinstance(obj, BSplineCurve3D):
+        for point in obj.control_points:
+            scale_object(point, sx, sy, sz)
+    elif isinstance(obj, Cone3D):
+        scale_object(obj.apex, sx, sy, sz)
+        scale_object(obj.base_center, sx, sy, sz)
+        for vertex in obj.base_vertices:
+            scale_object(vertex, sx, sy, sz)
+        obj.height *= sy  # Ajusta a altura
+        obj.radius *= sx  # Ajusta o raio (assumindo escalonamento uniforme em x e z)
+    elif isinstance(obj, Cube3D):
+        for vertex in obj.vertices:
+            scale_object(vertex, sx, sy, sz)
+        obj.size *= max(sx, sy, sz)  # Ajusta o tamanho (assumindo escalonamento uniforme)
+    elif isinstance(obj, BezierSurface3D):
+        for row in obj.control_points:
+            for point in row:
+                scale_object(point, sx, sy, sz)
+    else:
+        pass  # Para outros tipos de objetos
+
+def rotate_object(obj, angle, axis):
+    """Rotaciona um objeto modificando suas coordenadas diretamente."""
+    angle_rad = math.radians(angle)
+    if axis.lower() == 'x':
+        cos_a = math.cos(angle_rad)
+        sin_a = math.sin(angle_rad)
+        rotation_func = lambda x, y, z: (x, y * cos_a - z * sin_a, y * sin_a + z * cos_a)
+    elif axis.lower() == 'y':
+        cos_a = math.cos(angle_rad)
+        sin_a = math.sin(angle_rad)
+        rotation_func = lambda x, y, z: (x * cos_a + z * sin_a, y, -x * sin_a + z * cos_a)
+    elif axis.lower() == 'z':
+        cos_a = math.cos(angle_rad)
+        sin_a = math.sin(angle_rad)
+        rotation_func = lambda x, y, z: (x * cos_a - y * sin_a, x * sin_a + y * cos_a, z)
+    else:
+        raise ValueError("Axis must be 'x', 'y', or 'z'")
+
+    def rotate_point(p):
+        x, y, z = p.x, p.y, p.z
+        p.x, p.y, p.z = rotation_func(x, y, z)
+
+    if isinstance(obj, Point3D):
+        rotate_point(obj)
+    elif isinstance(obj, Line3D):
+        rotate_object(obj.start, angle, axis)
+        rotate_object(obj.end, angle, axis)
+    elif isinstance(obj, Polygon3D):
+        for vertex in obj.vertices:
+            rotate_object(vertex, angle, axis)
+    elif isinstance(obj, BezierCurve3D) or isinstance(obj, BSplineCurve3D):
+        for point in obj.control_points:
+            rotate_object(point, angle, axis)
+    elif isinstance(obj, Cone3D):
+        rotate_object(obj.apex, angle, axis)
+        rotate_object(obj.base_center, angle, axis)
+        for vertex in obj.base_vertices:
+            rotate_object(vertex, angle, axis)
+    elif isinstance(obj, Cube3D):
+        for vertex in obj.vertices:
+            rotate_object(vertex, angle, axis)
+    elif isinstance(obj, BezierSurface3D):
+        for row in obj.control_points:
+            for point in row:
+                rotate_object(point, angle, axis)
+    else:
+        pass  # Para outros tipos de objetos
+
+# Funções de clipping 2D
+
+INSIDE = 0  # 0000
+LEFT = 1    # 0001
+RIGHT = 2   # 0010
+BOTTOM = 4  # 0100
+TOP = 8     # 1000
+
+def compute_out_code(x, y, clip_region):
+    x_min, y_min, x_max, y_max = clip_region
+    code = INSIDE
+    if x < x_min:
+        code |= LEFT
+    elif x > x_max:
+        code |= RIGHT
+    if y < y_min:
+        code |= TOP  # Observação: invertido por causa da coordenada Y na tela
+    elif y > y_max:
+        code |= BOTTOM
+    return code
+
+def cohen_sutherland_clip(x0, y0, x1, y1, clip_region):
+    """Implementação do algoritmo de clipping de linha de Cohen-Sutherland."""
+    x_min, y_min, x_max, y_max = clip_region
+    out_code0 = compute_out_code(x0, y0, clip_region)
+    out_code1 = compute_out_code(x1, y1, clip_region)
+    accept = False
+
+    while True:
+        if not (out_code0 | out_code1):
+            # Ambos os pontos estão dentro da região
+            accept = True
+            break
+        elif out_code0 & out_code1:
+            # Ambos os pontos estão fora da região (na mesma área externa)
+            break
+        else:
+            # Pelo menos um ponto está fora, precisamos recortar
+            out_code_out = out_code0 if out_code0 else out_code1
+            if out_code_out & TOP:
+                x = x0 + (x1 - x0) * (y_min - y0) / (y1 - y0)
+                y = y_min
+            elif out_code_out & BOTTOM:
+                x = x0 + (x1 - x0) * (y_max - y0) / (y1 - y0)
+                y = y_max
+            elif out_code_out & RIGHT:
+                y = y0 + (y1 - y0) * (x_max - x0) / (x1 - x0)
+                x = x_max
+            elif out_code_out & LEFT:
+                y = y0 + (y1 - y0) * (x_min - x0) / (x1 - x0)
+                x = x_min
+
+            # Atualiza o ponto fora da região
+            if out_code_out == out_code0:
+                x0, y0 = x, y
+                out_code0 = compute_out_code(x0, y0, clip_region)
+            else:
+                x1, y1 = x, y
+                out_code1 = compute_out_code(x1, y1, clip_region)
+
+    if accept:
+        return x0, y0, x1, y1
+    else:
+        return None
+
+def sutherland_hodgman_clip(polygon, clip_region):
+    """Implementação do algoritmo de clipping de polígono de Sutherland-Hodgman."""
+    x_min, y_min, x_max, y_max = clip_region
+    clip_edges = [
+        ('left', x_min),
+        ('right', x_max),
+        ('bottom', y_max),
+        ('top', y_min)  # Nota: invertido devido ao sistema de coordenadas
+    ]
+
+    def inside(p, edge):
+        position, value = edge
+        x, y = p
+        if position == 'left':
+            return x >= value
+        elif position == 'right':
+            return x <= value
+        elif position == 'bottom':
+            return y <= value
+        elif position == 'top':
+            return y >= value
+
+    def compute_intersection(p1, p2, edge):
+        position, value = edge
+        x1, y1 = p1
+        x2, y2 = p2
+        if x1 == x2 and y1 == y2:
+            return p1  # Segmento degenerado
+
+        if position in ('left', 'right'):
+            x = value
+            y = y1 + (y2 - y1) * (value - x1) / (x2 - x1)
+        else:  # 'top' ou 'bottom'
+            y = value
+            x = x1 + (x2 - x1) * (value - y1) / (y2 - y1)
+        return (x, y)
+
+    output_list = polygon
+    for edge in clip_edges:
+        input_list = output_list
+        output_list = []
+        if not input_list:
+            break
+        s = input_list[-1]
+        for e in input_list:
+            if inside(e, edge):
+                if not inside(s, edge):
+                    output_list.append(compute_intersection(s, e, edge))
+                output_list.append(e)
+            elif inside(s, edge):
+                output_list.append(compute_intersection(s, e, edge))
+            s = e
+
+    return output_list
 
 class Window:
     def __init__(self, width=800, height=600, title="Sistema Gráfico 3D"):
@@ -387,16 +744,34 @@ class Window:
         self.update()
 
     def create_objects(self):
+        # Superfície de Bézier
+        control_points_matrix = [
+            [Point3D(-1.5, -1.5, 4), Point3D(-0.5, -1.5, 2), Point3D(0.5, -1.5, -1), Point3D(1.5, -1.5, 2)],
+            [Point3D(-1.5, -0.5, 1), Point3D(-0.5, -0.5, 3), Point3D(0.5, -0.5, 0), Point3D(1.5, -0.5, -1)],
+            [Point3D(-1.5, 0.5, 4), Point3D(-0.5, 0.5, 0), Point3D(0.5, 0.5, 3), Point3D(1.5, 0.5, 4)],
+            [Point3D(-1.5, 1.5, -2), Point3D(-0.5, 1.5, -2), Point3D(0.5, 1.5, 0), Point3D(1.5, 1.5, -1)],
+        ]
+        bezier_surface = BezierSurface3D(control_points_matrix, color='cyan', wireframe=True)
+        rotate_object(bezier_surface, 30, 'x')
+        self.objects.append(bezier_surface)
+
+        # Outros objetos podem ser adicionados aqui
+
         # Cubo no Octante 1 (x > 0, y > 0, z > 0)
         cube = Cube3D(Point3D(2, 2, 2), 2, color='blue')
+        rotate_object(cube, 45, 'x')
+        rotate_object(cube, 30, 'y')
+        translate_object(cube, 0, 0, -1)
         self.objects.append(cube)
 
         # Ponto no Octante 2 (x < 0, y > 0, z > 0)
         point = Point3D(-2, 2, 2, color='green')
+        translate_object(point, 1, 0, 0)
         self.objects.append(point)
 
         # Reta no Octante 3 (x < 0, y < 0, z > 0)
         line = Line3D(Point3D(-2, -2, 2), Point3D(-1, -1, 2), color='red')
+        rotate_object(line, 45, 'z')
         self.objects.append(line)
 
         # Polígono no Octante 4 (x > 0, y < 0, z > 0) sem preenchimento
@@ -407,6 +782,7 @@ class Window:
             Point3D(2, -0.5, 2)
         ]
         polygon = Polygon3D(vertices, color='purple')  # fill_color não especificado
+        scale_object(polygon, 1, 2, 1)
         self.objects.append(polygon)
 
         # Curva de Bézier no Octante 5 (x > 0, y > 0, z < 0)
@@ -420,6 +796,7 @@ class Window:
             Point3D(7, 0, -1)
         ]
         bezier_curve = BezierCurve3D(bezier_control_points, color='orange')
+        translate_object(bezier_curve, -2, 0, 0)
         self.objects.append(bezier_curve)
 
         # Curva B-spline no Octante 6 (x < 0, y > 0, z < 0)
@@ -435,6 +812,7 @@ class Window:
             Point3D(-9, 1, -9)
         ]
         bspline_curve = BSplineCurve3D(bspline_control_points, degree=3, color='brown')
+        scale_object(bspline_curve, 0.5, 0.5, 0.5)
         self.objects.append(bspline_curve)
 
         # Cone no Octante 7 (x < 0, y < 0, z < 0)
@@ -446,6 +824,7 @@ class Window:
             color='magenta',
             fill_color='pink'
         )
+        rotate_object(cone, 30, 'y')
         self.objects.append(cone)
 
     def rotate_left(self, event):
@@ -570,136 +949,18 @@ class Window:
         for obj in self.objects:
             # Aplica a transformação (visualização) ao objeto
             obj.transform(view_matrix)
-            # Aplica a projeção ao objeto
-            obj.project(self.project_point)
-            # Desenha o objeto no canvas com o clipping
-            obj.draw(self.canvas, self.clip_region)
+            # Aplica o clipping simples em Z
+            if obj.is_visible():
+                # Aplica a projeção ao objeto
+                obj.project(self.project_point)
+                # Desenha o objeto no canvas com o clipping 2D
+                obj.draw(self.canvas, self.clip_region)
 
         # Atualiza a tela
         self.canvas.after(16, self.update)
 
     def run(self):
         self.root.mainloop()
-
-# Funções de clipping
-
-INSIDE = 0  # 0000
-LEFT = 1    # 0001
-RIGHT = 2   # 0010
-BOTTOM = 4  # 0100
-TOP = 8     # 1000
-
-def compute_out_code(x, y, clip_region):
-    x_min, y_min, x_max, y_max = clip_region
-    code = INSIDE
-    if x < x_min:
-        code |= LEFT
-    elif x > x_max:
-        code |= RIGHT
-    if y < y_min:
-        code |= TOP  # Observação: invertido por causa da coordenada Y na tela
-    elif y > y_max:
-        code |= BOTTOM
-    return code
-
-def cohen_sutherland_clip(x0, y0, x1, y1, clip_region):
-    """Implementação do algoritmo de clipping de linha de Cohen-Sutherland."""
-    x_min, y_min, x_max, y_max = clip_region
-    out_code0 = compute_out_code(x0, y0, clip_region)
-    out_code1 = compute_out_code(x1, y1, clip_region)
-    accept = False
-
-    while True:
-        if not (out_code0 | out_code1):
-            # Ambos os pontos estão dentro da região
-            accept = True
-            break
-        elif out_code0 & out_code1:
-            # Ambos os pontos estão fora da região (na mesma área externa)
-            break
-        else:
-            # Pelo menos um ponto está fora, precisamos recortar
-            out_code_out = out_code0 if out_code0 else out_code1
-            if out_code_out & TOP:
-                x = x0 + (x1 - x0) * (y_min - y0) / (y1 - y0)
-                y = y_min
-            elif out_code_out & BOTTOM:
-                x = x0 + (x1 - x0) * (y_max - y0) / (y1 - y0)
-                y = y_max
-            elif out_code_out & RIGHT:
-                y = y0 + (y1 - y0) * (x_max - x0) / (x1 - x0)
-                x = x_max
-            elif out_code_out & LEFT:
-                y = y0 + (y1 - y0) * (x_min - x0) / (x1 - x0)
-                x = x_min
-
-            # Atualiza o ponto fora da região
-            if out_code_out == out_code0:
-                x0, y0 = x, y
-                out_code0 = compute_out_code(x0, y0, clip_region)
-            else:
-                x1, y1 = x, y
-                out_code1 = compute_out_code(x1, y1, clip_region)
-
-    if accept:
-        return x0, y0, x1, y1
-    else:
-        return None
-
-def sutherland_hodgman_clip(polygon, clip_region):
-    """Implementação do algoritmo de clipping de polígono de Sutherland-Hodgman."""
-    x_min, y_min, x_max, y_max = clip_region
-    clip_edges = [
-        ('left', x_min),
-        ('right', x_max),
-        ('bottom', y_max),
-        ('top', y_min)  # Nota: invertido devido ao sistema de coordenadas
-    ]
-
-    def inside(p, edge):
-        position, value = edge
-        x, y = p
-        if position == 'left':
-            return x >= value
-        elif position == 'right':
-            return x <= value
-        elif position == 'bottom':
-            return y <= value
-        elif position == 'top':
-            return y >= value
-
-    def compute_intersection(p1, p2, edge):
-        position, value = edge
-        x1, y1 = p1
-        x2, y2 = p2
-        if x1 == x2 and y1 == y2:
-            return p1  # Segmento degenerado
-
-        if position in ('left', 'right'):
-            x = value
-            y = y1 + (y2 - y1) * (value - x1) / (x2 - x1)
-        else:  # 'top' ou 'bottom'
-            y = value
-            x = x1 + (x2 - x1) * (value - y1) / (y2 - y1)
-        return (x, y)
-
-    output_list = polygon
-    for edge in clip_edges:
-        input_list = output_list
-        output_list = []
-        if not input_list:
-            break
-        s = input_list[-1]
-        for e in input_list:
-            if inside(e, edge):
-                if not inside(s, edge):
-                    output_list.append(compute_intersection(s, e, edge))
-                output_list.append(e)
-            elif inside(s, edge):
-                output_list.append(compute_intersection(s, e, edge))
-            s = e
-
-    return output_list
 
 if __name__ == '__main__':
     window = Window()
