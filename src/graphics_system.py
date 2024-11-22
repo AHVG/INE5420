@@ -692,11 +692,31 @@ class Window:
         self.height = height
         self.title = title
 
-        # Configurações da janela
+                # Configurações da janela
         self.root = tk.Tk()
         self.root.title(self.title)
-        self.canvas = tk.Canvas(self.root, width=self.width, height=self.height, bg='white')
-        self.canvas.pack()
+
+        # Frame principal para conter o canvas e os botões
+        main_frame = tk.Frame(self.root)
+        main_frame.grid(row=0, column=0, sticky='nsew')
+
+        # Configurações para redimensionamento
+        self.root.rowconfigure(0, weight=1)
+        self.root.columnconfigure(0, weight=1)
+        main_frame.rowconfigure(0, weight=1)
+        main_frame.columnconfigure(0, weight=1)
+        main_frame.columnconfigure(1, weight=0)
+
+        # Canvas
+        self.canvas = tk.Canvas(main_frame, bg='white', width=self.width, height=self.height)
+        self.canvas.grid(row=0, column=0, sticky='nsew')
+
+        # Vincula o evento de redimensionamento do canvas
+        self.canvas.bind('<Configure>', self.on_canvas_resize)
+
+        # Painel lateral para os botões
+        button_frame = tk.Frame(main_frame)
+        button_frame.grid(row=0, column=1, sticky='ns')
 
         # Definindo a margem
         self.margin = 50  # Pixels
@@ -740,8 +760,68 @@ class Window:
         self.canvas.bind('<d>', self.move_right)
         self.canvas.focus_set()
 
+        self.create_navigation_buttons(button_frame)
+
         # Inicia o loop de atualização
         self.update()
+
+    def on_canvas_resize(self, event):
+        """Atualiza os parâmetros quando o canvas é redimensionado."""
+        self.width = event.width
+        self.height = event.height
+
+        # Atualiza o centro do canvas
+        self.center_x = self.width // 2
+        self.center_y = self.height // 2
+
+        # Atualiza a região de clipping
+        self.clip_region = (
+            self.margin,
+            self.margin,
+            self.width - self.margin,
+            self.height - self.margin
+        )
+
+    def create_navigation_buttons(self, parent):
+        # Cria botões para rotacionar a câmera
+        rotate_label = tk.Label(parent, text="Rotação")
+        rotate_label.grid(row=0, column=0, columnspan=3, pady=5)
+
+        btn_rotate_up = tk.Button(parent, text="↑", command=lambda: self.rotate_up())
+        btn_rotate_up.grid(row=1, column=1)
+
+        btn_rotate_left = tk.Button(parent, text="←", command=lambda: self.rotate_left())
+        btn_rotate_left.grid(row=2, column=0)
+
+        btn_rotate_right = tk.Button(parent, text="→", command=lambda: self.rotate_right())
+        btn_rotate_right.grid(row=2, column=2)
+
+        btn_rotate_down = tk.Button(parent, text="↓", command=lambda: self.rotate_down())
+        btn_rotate_down.grid(row=3, column=1)
+
+        # Espaço entre grupos de botões
+        spacer = tk.Label(parent, text="")
+        spacer.grid(row=4, column=0, pady=10)
+
+        # Cria botões para mover a câmera
+        move_label = tk.Label(parent, text="Movimento")
+        move_label.grid(row=5, column=0, columnspan=3, pady=5)
+
+        btn_move_forward = tk.Button(parent, text="Avançar (W)", command=lambda: self.move_forward())
+        btn_move_forward.grid(row=6, column=0, columnspan=3, sticky='ew')
+
+        btn_move_backward = tk.Button(parent, text="Recuar (S)", command=lambda: self.move_backward())
+        btn_move_backward.grid(row=7, column=0, columnspan=3, sticky='ew')
+
+        btn_move_left = tk.Button(parent, text="Esquerda (A)", command=lambda: self.move_left())
+        btn_move_left.grid(row=8, column=0, columnspan=3, sticky='ew')
+
+        btn_move_right = tk.Button(parent, text="Direita (D)", command=lambda: self.move_right())
+        btn_move_right.grid(row=9, column=0, columnspan=3, sticky='ew')
+
+        # Configurações para expandir os botões
+        for i in range(3):
+            parent.columnconfigure(i, weight=1)
 
     def create_objects(self):
         # Superfície de Bézier
@@ -827,39 +907,39 @@ class Window:
         rotate_object(cone, 30, 'y')
         self.objects.append(cone)
 
-    def rotate_left(self, event):
+    def rotate_left(self, event=None):
         self.yaw -= 5  # Graus
 
-    def rotate_right(self, event):
+    def rotate_right(self, event=None):
         self.yaw += 5  # Graus
 
-    def rotate_up(self, event):
+    def rotate_up(self, event=None):
         self.pitch += 5  # Graus
         self.pitch = min(self.pitch, 89)  # Limita o pitch a 89 graus
 
-    def rotate_down(self, event):
+    def rotate_down(self, event=None):
         self.pitch -= 5  # Graus
         self.pitch = max(self.pitch, -89)  # Limita o pitch a -89 graus
 
-    def move_forward(self, event):
+    def move_forward(self, event=None):
         direction = self.get_direction_vector()
         self.eye[0] += direction[0] * 0.5
         self.eye[1] += direction[1] * 0.5
         self.eye[2] += direction[2] * 0.5
 
-    def move_backward(self, event):
+    def move_backward(self, event=None):
         direction = self.get_direction_vector()
         self.eye[0] -= direction[0] * 0.5
         self.eye[1] -= direction[1] * 0.5
         self.eye[2] -= direction[2] * 0.5
 
-    def move_left(self, event):
+    def move_left(self, event=None):
         direction = self.get_right_vector()
         self.eye[0] -= direction[0] * 0.5
         self.eye[1] -= direction[1] * 0.5
         self.eye[2] -= direction[2] * 0.5
 
-    def move_right(self, event):
+    def move_right(self, event=None):
         direction = self.get_right_vector()
         self.eye[0] += direction[0] * 0.5
         self.eye[1] += direction[1] * 0.5
