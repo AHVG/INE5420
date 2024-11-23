@@ -799,6 +799,9 @@ class Window:
         # 2. Frame para a Lista de Objetos e Controles de Transformação
         control_frame = tk.Frame(side_frame)
         control_frame.grid(row=0, column=1, sticky='nsew', padx=5, pady=5)
+        
+        create_frame = tk.Frame(side_frame)
+        create_frame.grid(row=0, column=3, sticky='nsew', padx=5, pady=5)
 
         # Configurações de expansão para os subframes
         side_frame.rowconfigure(0, weight=0)  # navigation_frame não expande verticalmente
@@ -808,6 +811,7 @@ class Window:
         # Atualiza os métodos para usar os novos subframes
         self.create_navigation_buttons(navigation_frame)
         self.create_object_list_and_transform_controls(control_frame)
+        self.create_layout(create_frame)
 
         self.bind_events()
 
@@ -979,6 +983,51 @@ class Window:
         btn_clear_transformations = tk.Button(pending_frame, text="Limpar Transformações", command=self.clear_transformations)
         btn_clear_transformations.pack(pady=5)
 
+    def create_layout(self, parent):
+        """Cria o layout com inputs e botões para criação de objetos."""
+        # Título
+        title = tk.Label(parent, text="Adicionar Objetos", bg='lightgray', font=('Arial', 16, 'bold'))
+        title.pack(pady=10)
+
+        # Input e botão para Ponto
+        tk.Label(parent, text="Ponto (x,y,z):", bg='lightgray').pack()
+        self.point_entry = tk.Entry(parent)
+        self.point_entry.pack()
+        btn_add_point = tk.Button(parent, text="Adicionar Ponto", command=self.add_point)
+        btn_add_point.pack(pady=5)
+
+        # Input e botão para Linha
+        tk.Label(parent, text="Linha (x1,y1,z1)-(x2,y2,z2):", bg='lightgray').pack()
+        self.line_entry = tk.Entry(parent)
+        self.line_entry.pack()
+        btn_add_line = tk.Button(parent, text="Adicionar Linha", command=self.add_line)
+        btn_add_line.pack(pady=5)
+
+        # Input e botão para Polígono
+        tk.Label(parent, text="Polígono (x1,y1,z1;x2,y2,z2;...):", bg='lightgray').pack()
+        self.polygon_entry = tk.Entry(parent)
+        self.polygon_entry.pack()
+        btn_add_polygon = tk.Button(parent, text="Adicionar Polígono", command=self.add_polygon)
+        btn_add_polygon.pack(pady=5)
+
+        # Input e botão para Curva de Bézier
+        tk.Label(parent, text="Curva Bézier (x1,y1,z1;x2,y2,z2;...):", bg='lightgray').pack()
+        self.curve_entry = tk.Entry(parent)
+        self.curve_entry.pack()
+        btn_add_curve = tk.Button(parent, text="Adicionar Curva Bézier", command=self.add_bezier_curve)
+        btn_add_curve.pack(pady=5)
+
+        # --------------------- Entrada para Superfície Bicúbica ---------------------
+        tk.Label(parent, text="Superfície Bicúbica 4x4:", bg='lightgray', font=('Arial', 12, 'bold')).pack(pady=(20, 5))
+        tk.Label(parent, text="Formato:", bg='lightgray').pack()
+        tk.Label(parent, text="(x11,y11,z11),(x12,y12,z12),...;(x21,y21,z21),(x22,y22,z22),...;...;(x41,y41,z41),(x42,y42,z42),...", bg='lightgray', wraplength=180, justify='left').pack(padx=10)
+
+        self.surface_entry = tk.Entry(parent, width=30)
+        self.surface_entry.pack(pady=5)
+
+        btn_add_surface = tk.Button(parent, text="Adicionar Superfície Bicúbica", command=self.add_bicubic_surface)
+        btn_add_surface.pack(pady=5)
+
     def create_objects(self):
         # Superfície de Bézier
         control_points_matrix = [
@@ -1144,6 +1193,106 @@ class Window:
         self.transformations.clear()
         self.transformation_listbox.delete(0, tk.END)
 
+    def add_bicubic_surface(self):
+        """Adiciona uma superfície bicúbica com os pontos de controle especificados."""
+        input_str = self.surface_entry.get()
+        try:
+            rows = input_str.strip().split(';')
+            if len(rows) != 4:
+                raise ValueError("A superfície bicúbica requer exatamente 4 linhas de pontos de controle.")
+
+            control_points_matrix = []
+            for row_index, row in enumerate(rows):
+                # Remove espaços e divide os pontos
+                points_str = row.strip().split('),(')
+                # Remove possíveis '(' do primeiro ponto e ')' do último ponto
+                points_str[0] = points_str[0].lstrip('(')
+                points_str[-1] = points_str[-1].rstrip(')')
+                if len(points_str) != 4:
+                    raise ValueError(f"Cada linha deve conter exatamente 4 pontos de controle. Erro na linha {row_index + 1}.")
+
+                row_points = []
+                for point_str in points_str:
+                    coords = point_str.split(',')
+                    if len(coords) != 3:
+                        raise ValueError(f"Formato inválido para o ponto: {point_str}")
+                    x, y, z = map(float, coords)
+                    row_points.append(Point3D(x, y, z))
+                control_points_matrix.append(row_points)
+
+            # Cria a superfície bicúbica
+            bicubic_surface = BezierSurface3D(control_points_matrix, color='orange', wireframe=True, name="Superfície Bicúbica")
+            rotate_object(bicubic_surface, 30, 'x')  # Aplicar rotações padrão ou personalizadas
+            self.objects.append(bicubic_surface)
+
+            # Limpa a entrada após adicionar
+            self.surface_entry.delete(0, tk.END)
+
+        except Exception as e:
+            tk.messagebox.showerror("Erro ao Adicionar Superfície", f"Erro: {e}")
+
+    def add_point(self):
+        """Adiciona um ponto com as coordenadas especificadas."""
+        coords = self.point_entry.get()
+        try:
+            x, y, z = map(float, coords.split(','))
+            point = Point3D(x, y, z, color='green', name="Ponto")
+            self.objects.append(point)
+            self.point_entry.delete(0, tk.END)
+        except ValueError:
+            tk.messagebox.showerror("Erro ao Adicionar Ponto", "Entrada inválida para as coordenadas do ponto.\nFormato esperado: x,y,z")
+
+    def add_line(self):
+        """Adiciona uma linha entre dois pontos especificados."""
+        coords = self.line_entry.get()
+        try:
+            points = coords.split('-')
+            if len(points) != 2:
+                raise ValueError("Formato inválido para a linha.\nFormato esperado: x1,y1,z1-x2,y2,z2")
+            x1, y1, z1 = map(float, points[0].split(','))
+            x2, y2, z2 = map(float, points[1].split(','))
+            start = Point3D(x1, y1, z1)
+            end = Point3D(x2, y2, z2)
+            line = Line3D(start, end, color='red', name="Linha")
+            self.objects.append(line)
+            self.line_entry.delete(0, tk.END)
+        except ValueError as e:
+            tk.messagebox.showerror("Erro ao Adicionar Linha", f"Erro: {e}")
+
+    def add_polygon(self):
+        """Adiciona um polígono com os vértices especificados."""
+        coords = self.polygon_entry.get()
+        try:
+            points_str = coords.split(';')
+            if len(points_str) < 3:
+                raise ValueError("Um polígono deve ter pelo menos 3 pontos.")
+            vertices = []
+            for point_str in points_str:
+                x, y, z = map(float, point_str.split(','))
+                vertices.append(Point3D(x, y, z))
+            polygon = Polygon3D(vertices, color='purple', name="Polígono")
+            self.objects.append(polygon)
+            self.polygon_entry.delete(0, tk.END)
+        except ValueError as e:
+            tk.messagebox.showerror("Erro ao Adicionar Polígono", f"Erro: {e}")
+
+    def add_bezier_curve(self):
+        """Adiciona uma curva de Bézier com os pontos de controle especificados."""
+        coords = self.curve_entry.get()
+        try:
+            points_str = coords.split(';')
+            if len(points_str) < 2:
+                raise ValueError("Uma curva de Bézier deve ter pelo menos 2 pontos de controle.")
+            control_points = []
+            for point_str in points_str:
+                x, y, z = map(float, point_str.split(','))
+                control_points.append(Point3D(x, y, z))
+            bezier_curve = BezierCurve3D(control_points, color='orange', name="Curva de Bézier")
+            self.objects.append(bezier_curve)
+            self.curve_entry.delete(0, tk.END)
+        except ValueError as e:
+            tk.messagebox.showerror("Erro ao Adicionar Curva Bézier", f"Erro: {e}")
+
     def rotate_left(self, event=None):
         self.yaw -= 5  # Graus
 
@@ -1256,6 +1405,36 @@ class Window:
         y = -y * factor + self.center_y  # Inverte o eixo Y para corresponder às coordenadas da tela
         return x, y
 
+
+    def calculate_average_distance(self, obj):
+        """Calcula a distância média dos vértices do objeto à câmera."""
+        distances = []
+        if isinstance(obj, Point3D):
+            distances.append(self.distance(obj.tx, obj.ty, obj.tz))
+        elif isinstance(obj, Line3D):
+            distances.append(self.distance(obj.start.tx, obj.start.ty, obj.start.tz))
+            distances.append(self.distance(obj.end.tx, obj.end.ty, obj.end.tz))
+        elif isinstance(obj, Polygon3D) or isinstance(obj, Cube3D) or isinstance(obj, Cone3D):
+            vertices = []
+            if isinstance(obj, Polygon3D):
+                vertices = obj.vertices
+            elif isinstance(obj, Cube3D):
+                vertices = obj.vertices
+            elif isinstance(obj, Cone3D):
+                vertices = [obj.apex, obj.base_center] + obj.base_vertices
+            for vertex in vertices:
+                distances.append(self.distance(vertex.tx, vertex.ty, vertex.tz))
+
+        if distances:
+            return sum(distances) / len(distances)
+        else:
+            return 0  # Se o objeto não tiver vértices, consideramos distância zero
+
+    def distance(self, x, y, z):
+        """Calcula a distância euclidiana do ponto (x, y, z) à câmera."""
+        ex, ey, ez = self.eye
+        return math.sqrt((x - ex) ** 2 + (y - ey) ** 2 + (z - ez) ** 2)
+
     def update(self):
         self.canvas.delete('all')
 
@@ -1265,7 +1444,10 @@ class Window:
 
         view_matrix = self.get_view_matrix()
 
-        for obj in self.objects:
+        # Ordena os objetos de maior para menor distância (objetos mais distantes primeiro)
+        sorted_objects = sorted(self.objects, key=self.calculate_average_distance, reverse=True)
+
+        for obj in sorted_objects:
             # Aplica a transformação (visualização) ao objeto
             obj.transform(view_matrix)
             # Aplica o clipping simples em Z
