@@ -791,9 +791,25 @@ class Window:
         # Inicializa os objetos 3D
         self.create_objects()
 
+        # Criação de Subframes dentro do side_frame
+        # 1. Frame para os Botões de Navegação
+        navigation_frame = tk.Frame(side_frame)
+        navigation_frame.grid(row=0, column=0, sticky='ew', padx=5, pady=5)
+
+        # 2. Frame para a Lista de Objetos e Controles de Transformação
+        control_frame = tk.Frame(side_frame)
+        control_frame.grid(row=0, column=1, sticky='nsew', padx=5, pady=5)
+
+        # Configurações de expansão para os subframes
+        side_frame.rowconfigure(0, weight=0)  # navigation_frame não expande verticalmente
+        side_frame.rowconfigure(1, weight=1)  # control_frame expande verticalmente
+        side_frame.columnconfigure(0, weight=1)
+
+        # Atualiza os métodos para usar os novos subframes
+        self.create_navigation_buttons(navigation_frame)
+        self.create_object_list_and_transform_controls(control_frame)
+
         self.bind_events()
-        self.create_navigation_buttons(side_frame)
-        self.create_object_list_and_transform_controls(side_frame)
 
         # Inicia o loop de atualização
         self.update()
