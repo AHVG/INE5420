@@ -1,5 +1,7 @@
 import tkinter as tk
+from tkinter import filedialog, messagebox
 import math
+
 
 # Classe para representar uma transformação
 class Transformation:
@@ -727,6 +729,9 @@ class Window:
         self.root = tk.Tk()
         self.root.title(self.title)
 
+        # Criação do menu
+        self.create_menu()
+
         # Frame principal para conter o canvas e os botões
         main_frame = tk.Frame(self.root)
         main_frame.grid(row=0, column=0, sticky='nsew')
@@ -748,19 +753,6 @@ class Window:
         # Painel lateral para os botões e a lista de objetos
         side_frame = tk.Frame(main_frame)
         side_frame.grid(row=0, column=1, sticky='ns')
-
-        # Configurações de redimensionamento do side_frame
-        side_frame.rowconfigure(0, weight=1)
-        side_frame.columnconfigure(0, weight=1)
-        side_frame.columnconfigure(1, weight=1)
-
-        # Painel para os botões de navegação
-        button_frame = tk.Frame(side_frame)
-        button_frame.grid(row=0, column=0, sticky='nsew')
-
-        # Painel para a lista de objetos e transformações
-        object_frame = tk.Frame(side_frame)
-        object_frame.grid(row=0, column=1, sticky='nsew')
 
         # Definindo a margem
         self.margin = 50  # Pixels
@@ -800,11 +792,23 @@ class Window:
         self.create_objects()
 
         self.bind_events()
-        self.create_navigation_buttons(button_frame)
-        self.create_object_list_and_transform_controls(object_frame)
+        self.create_navigation_buttons(side_frame)
+        self.create_object_list_and_transform_controls(side_frame)
 
         # Inicia o loop de atualização
         self.update()
+
+    def create_menu(self):
+        """Cria o menu da aplicação."""
+        menubar = tk.Menu(self.root)
+        self.root.config(menu=menubar)
+
+        file_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="Arquivo", menu=file_menu)
+        file_menu.add_command(label="Exportar OBJ", command=self.export_obj_file)
+        file_menu.add_command(label="Importar OBJ", command=self.import_obj_file)
+        file_menu.add_separator()
+        file_menu.add_command(label="Sair", command=self.root.quit)
 
     def bind_events(self):
         # Liga os eventos de teclado
@@ -817,6 +821,23 @@ class Window:
         self.root.bind('<a>', self.move_left)
         self.root.bind('<d>', self.move_right)
         self.canvas.focus_set()
+
+    def on_canvas_resize(self, event):
+        """Atualiza os parâmetros quando o canvas é redimensionado."""
+        self.width = event.width
+        self.height = event.height
+
+        # Atualiza o centro do canvas
+        self.center_x = self.width // 2
+        self.center_y = self.height // 2
+
+        # Atualiza a região de clipping
+        self.clip_region = (
+            self.margin,
+            self.margin,
+            self.width - self.margin,
+            self.height - self.margin
+        )
 
     def create_navigation_buttons(self, parent):
         # Cria botões para rotacionar a câmera
@@ -1046,7 +1067,7 @@ class Window:
             self.transformations.append(transformation)
             self.transformation_listbox.insert(tk.END, str(transformation))
         except ValueError:
-            pass  # Pode adicionar mensagens de erro aqui
+            messagebox.showerror("Erro", "Por favor, insira valores numéricos válidos para a translação.")
         finally:
             # Limpa as entradas
             self.entry_dx.delete(0, tk.END)
@@ -1062,7 +1083,7 @@ class Window:
             self.transformations.append(transformation)
             self.transformation_listbox.insert(tk.END, str(transformation))
         except ValueError:
-            pass  # Pode adicionar mensagens de erro aqui
+            messagebox.showerror("Erro", "Por favor, insira um valor numérico válido para o ângulo.")
         finally:
             # Limpa a entrada
             self.entry_angle.delete(0, tk.END)
@@ -1077,7 +1098,7 @@ class Window:
             self.transformations.append(transformation)
             self.transformation_listbox.insert(tk.END, str(transformation))
         except ValueError:
-            pass  # Pode adicionar mensagens de erro aqui
+            messagebox.showerror("Erro", "Por favor, insira valores numéricos válidos para a escala.")
         finally:
             # Limpa as entradas
             self.entry_sx.delete(0, tk.END)
@@ -1099,28 +1120,13 @@ class Window:
                     scale_object(self.selected_object, sx, sy, sz)
             # Limpa a lista de transformações após aplicar
             self.clear_transformations()
+        else:
+            messagebox.showwarning("Nenhum objeto selecionado", "Por favor, selecione um objeto na lista para aplicar as transformações.")
 
     def clear_transformations(self):
         """Limpa a lista de transformações pendentes."""
         self.transformations.clear()
         self.transformation_listbox.delete(0, tk.END)
-
-    def on_canvas_resize(self, event):
-        """Atualiza os parâmetros quando o canvas é redimensionado."""
-        self.width = event.width
-        self.height = event.height
-
-        # Atualiza o centro do canvas
-        self.center_x = self.width // 2
-        self.center_y = self.height // 2
-
-        # Atualiza a região de clipping
-        self.clip_region = (
-            self.margin,
-            self.margin,
-            self.width - self.margin,
-            self.height - self.margin
-        )
 
     def rotate_left(self, event=None):
         self.yaw -= 5  # Graus
@@ -1181,6 +1187,8 @@ class Window:
         ]
         # Normaliza o vetor
         length = math.sqrt(sum([coord ** 2 for coord in right]))
+        if length == 0:
+            return [0, 0, 0]
         right = [coord / length for coord in right]
         return right
 
@@ -1253,6 +1261,177 @@ class Window:
 
         # Atualiza a tela
         self.canvas.after(16, self.update)
+
+    def export_obj_file(self):
+        """Exporta todos os objetos da cena para um arquivo OBJ."""
+        # Abre um diálogo para selecionar onde salvar o arquivo
+        file_path = filedialog.asksaveasfilename(
+            defaultextension=".obj",
+            filetypes=[("OBJ files", "*.obj")],
+            title="Exportar para OBJ"
+        )
+        if not file_path:
+            return  # O usuário cancelou
+
+        try:
+            with open(file_path, 'w') as obj_file:
+                obj_file.write("# Exportação de todos os objetos da cena\n")
+
+                vertex_list = []
+                vertex_indices = {}
+                current_index = 1  # OBJ indices começam em 1
+
+                # Primeiro, coleta todos os vértices
+                for obj in self.objects:
+                    if isinstance(obj, (Point3D, Line3D, Polygon3D, Cube3D, Cone3D, BezierSurface3D)):
+                        vertices = []
+                        if isinstance(obj, Point3D):
+                            vertices = [obj]
+                        elif isinstance(obj, Line3D):
+                            vertices = [obj.start, obj.end]
+                        elif isinstance(obj, Polygon3D):
+                            vertices = obj.vertices
+                        elif isinstance(obj, Cube3D):
+                            vertices = obj.vertices
+                        elif isinstance(obj, Cone3D):
+                            vertices = [obj.apex, obj.base_center] + obj.base_vertices
+                        elif isinstance(obj, BezierSurface3D):
+                            for row in obj.control_points:
+                                vertices.extend(row)
+                        # Adiciona vértices únicos
+                        for vertex in vertices:
+                            key = (vertex.tx, vertex.ty, vertex.tz)
+                            if key not in vertex_indices:
+                                vertex_indices[key] = current_index
+                                vertex_list.append(vertex)
+                                current_index += 1
+
+                # Escreve todos os vértices
+                for vertex in vertex_list:
+                    obj_file.write(f"v {vertex.tx} {vertex.ty} {vertex.tz}\n")
+
+                # Agora, escreve cada objeto
+                for obj in self.objects:
+                    obj_name = obj.name if obj.name else "Objeto"
+                    obj_file.write(f"\no {obj_name}\n")
+                    if isinstance(obj, Point3D):
+                        idx = vertex_indices[(obj.tx, obj.ty, obj.tz)]
+                        # Ponto pode ser representado como uma linha com um único vértice
+                        obj_file.write(f"p {idx}\n")
+                    elif isinstance(obj, Line3D):
+                        idx1 = vertex_indices[(obj.start.tx, obj.start.ty, obj.start.tz)]
+                        idx2 = vertex_indices[(obj.end.tx, obj.end.ty, obj.end.tz)]
+                        obj_file.write(f"l {idx1} {idx2}\n")
+                    elif isinstance(obj, Polygon3D):
+                        indices = [vertex_indices[(v.tx, v.ty, v.tz)] for v in obj.vertices]
+                        face_line = " ".join(map(str, indices))
+                        obj_file.write(f"f {face_line}\n")
+                    elif isinstance(obj, Cube3D):
+                        for face in obj.faces:
+                            indices = [vertex_indices[(v.tx, v.ty, v.tz)] for v in face.vertices]
+                            face_line = " ".join(map(str, indices))
+                            obj_file.write(f"f {face_line}\n")
+                    elif isinstance(obj, Cone3D):
+                        for face in obj.faces:
+                            indices = [vertex_indices[(v.tx, v.ty, v.tz)] for v in face.vertices]
+                            face_line = " ".join(map(str, indices))
+                            obj_file.write(f"f {face_line}\n")
+                        # Base do cone
+                        base_indices = [vertex_indices[(v.tx, v.ty, v.tz)] for v in obj.base_face.vertices]
+                        base_face_line = " ".join(map(str, base_indices))
+                        obj_file.write(f"f {base_face_line}\n")
+                    elif isinstance(obj, BezierSurface3D):
+                        # Exportar superfícies bicúbicas de Bézier pode ser complexo.
+                        # Para simplicidade, ignoraremos neste exemplo.
+                        pass
+                    else:
+                        # Outros tipos de objetos podem ser tratados aqui
+                        pass
+
+            messagebox.showinfo("Exportação concluída", f"Objetos exportados para {file_path}")
+        except Exception as e:
+            messagebox.showerror("Erro na Exportação", f"Ocorreu um erro ao exportar os objetos:\n{e}")
+
+    def import_obj_file(self):
+        """Importa objetos de um arquivo OBJ e adiciona à cena."""
+        # Abre um diálogo para selecionar o arquivo OBJ
+        file_path = filedialog.askopenfilename(
+            filetypes=[("OBJ files", "*.obj")],
+            title="Importar OBJ"
+        )
+        if not file_path:
+            return  # O usuário cancelou
+
+        try:
+            with open(file_path, 'r') as obj_file:
+                vertices = []
+                current_object = None
+                current_object_name = "Objeto_importado"
+                lines = obj_file.readlines()
+
+                for line in lines:
+                    if line.startswith('#') or line.strip() == '':
+                        continue  # Ignora comentários e linhas vazias
+                    parts = line.strip().split()
+                    if not parts:
+                        continue
+                    if parts[0] == 'o':
+                        # Novo objeto
+                        if current_object:
+                            self.objects.append(current_object)
+                        current_object_name = ' '.join(parts[1:]) if len(parts) > 1 else "Objeto_importado"
+                        current_object = None
+                    elif parts[0] == 'v':
+                        # Vértice
+                        x, y, z = map(float, parts[1:4])
+                        vertices.append(Point3D(x, y, z))
+                    elif parts[0] == 'p':
+                        # Ponto
+                        idx = int(parts[1]) - 1  # OBJ indices começam em 1
+                        if 0 <= idx < len(vertices):
+                            p = vertices[idx]
+                            if current_object is None:
+                                current_object = Point3D(p.x, p.y, p.z, color='green', name=current_object_name)
+                            else:
+                                # Adiciona mais pontos ao objeto existente, se necessário
+                                pass  # Pode implementar múltiplos pontos em um objeto
+                    elif parts[0] == 'l':
+                        # Linha
+                        indices = [int(idx) - 1 for idx in parts[1:]]
+                        if len(indices) >= 2:
+                            start = vertices[indices[0]]
+                            end = vertices[indices[1]]
+                            line_obj = Line3D(Point3D(start.x, start.y, start.z, color='red'), 
+                                              Point3D(end.x, end.y, end.z, color='red'),
+                                              color='red',
+                                              name=current_object_name)
+                            self.objects.append(line_obj)
+                    elif parts[0] == 'f':
+                        # Face
+                        face_indices = []
+                        for part in parts[1:]:
+                            idx = part.split('/')[0]  # Ignora textura e normais
+                            face_indices.append(int(idx) - 1)
+                        face_vertices = [vertices[idx] for idx in face_indices]
+                        polygon = Polygon3D([Point3D(v.x, v.y, v.z) for v in face_vertices],
+                                            color='purple',
+                                            fill_color=None,  # Não preenche por padrão
+                                            name=current_object_name)
+                        self.objects.append(polygon)
+                    # Outros comandos como 'vn', 'vt' podem ser adicionados aqui se necessário
+
+                # Adiciona o último objeto, se existir
+                if current_object:
+                    self.objects.append(current_object)
+
+            # Atualiza a lista de objetos na interface
+            self.object_listbox.delete(0, tk.END)
+            for obj in self.objects:
+                self.object_listbox.insert(tk.END, obj.name)
+
+            messagebox.showinfo("Importação concluída", f"Objetos importados de {file_path}")
+        except Exception as e:
+            messagebox.showerror("Erro na Importação", f"Ocorreu um erro ao importar o arquivo OBJ:\n{e}")
 
     def run(self):
         self.root.mainloop()
