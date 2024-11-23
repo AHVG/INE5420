@@ -1,7 +1,30 @@
 import tkinter as tk
 import math
 
+# Classe para representar uma transformação
+class Transformation:
+    """Classe para representar uma transformação."""
+    def __init__(self, t_type, params):
+        self.type = t_type  # 'translate', 'rotate', 'scale'
+        self.params = params  # Parâmetros da transformação
+
+    def __str__(self):
+        if self.type == 'translate':
+            dx, dy, dz = self.params
+            return f"Translação: dx={dx}, dy={dy}, dz={dz}"
+        elif self.type == 'rotate':
+            angle, axis = self.params
+            return f"Rotação: ângulo={angle}, eixo={axis}"
+        elif self.type == 'scale':
+            sx, sy, sz = self.params
+            return f"Escala: sx={sx}, sy={sy}, sz={sz}"
+        else:
+            return "Transformação desconhecida"
+
 class Object3D:
+    def __init__(self, name=''):
+        self.name = name  # Nome do objeto
+
     """Classe base para todos os objetos 3D."""
     def transform(self, view_matrix):
         """Aplica a transformação (visualização) ao objeto."""
@@ -17,7 +40,8 @@ class Object3D:
 
 class Point3D(Object3D):
     """Classe para representar um ponto em 3D."""
-    def __init__(self, x, y, z, color='green'):
+    def __init__(self, x, y, z, color='green', name=""):
+        super().__init__(name)
         self.x = x  # Coordenadas originais
         self.y = y
         self.z = z
@@ -49,7 +73,8 @@ class Point3D(Object3D):
 
 class Line3D(Object3D):
     """Classe para representar uma reta (segmento de linha) em 3D."""
-    def __init__(self, start_point, end_point, color='red'):
+    def __init__(self, start_point, end_point, color='red', name=""):
+        super().__init__(name)
         self.start = start_point  # Ponto inicial (Point3D)
         self.end = end_point      # Ponto final (Point3D)
         self.color = color
@@ -77,7 +102,8 @@ class Line3D(Object3D):
 
 class Polygon3D(Object3D):
     """Classe para representar um polígono em 3D."""
-    def __init__(self, vertices, color='purple', fill_color=None):
+    def __init__(self, vertices, color='purple', fill_color=None, name=""):
+        super().__init__(name)
         self.vertices = vertices  # Lista de objetos Point3D
         self.color = color
         self.fill_color = fill_color  # Pode ser None ou uma string de cor
@@ -114,7 +140,8 @@ class Polygon3D(Object3D):
 
 class BezierCurve3D(Object3D):
     """Classe para representar uma curva de Bézier em 3D."""
-    def __init__(self, control_points, color='orange'):
+    def __init__(self, control_points, color='orange', name=""):
+        super().__init__(name)
         self.control_points = control_points  # Lista de objetos Point3D
         self.curve_points = []  # Pontos da curva após a avaliação
         self.color = color
@@ -168,7 +195,8 @@ class BezierCurve3D(Object3D):
 
 class BSplineCurve3D(Object3D):
     """Classe para representar uma curva B-spline em 3D."""
-    def __init__(self, control_points, degree=3, color='brown'):
+    def __init__(self, control_points, degree=3, color='brown', name=""):
+        super().__init__(name)
         self.control_points = control_points  # Lista de objetos Point3D
         self.degree = degree
         self.color = color
@@ -247,7 +275,8 @@ class BSplineCurve3D(Object3D):
 
 class Cone3D(Object3D):
     """Classe para representar um cone em 3D."""
-    def __init__(self, base_center, height, radius, segments=20, color='magenta', fill_color='pink'):
+    def __init__(self, base_center, height, radius, segments=20, color='magenta', fill_color='pink', name=""):
+        super().__init__(name)
         self.base_center = base_center  # Point3D
         self.height = height
         self.radius = radius
@@ -309,7 +338,8 @@ class Cone3D(Object3D):
 
 class Cube3D(Object3D):
     """Classe para representar um cubo em 3D."""
-    def __init__(self, center, size, color='blue'):
+    def __init__(self, center, size, color='blue', name=""):
+        super().__init__(name)
         self.size = size
         d = size / 2
         x, y, z = center.x, center.y, center.z
@@ -357,12 +387,13 @@ class Cube3D(Object3D):
 
 class BezierSurface3D(Object3D):
     """Classe para representar uma superfície bicúbica de Bézier em 3D."""
-    def __init__(self, control_points_matrix, color='cyan', wireframe=True):
+    def __init__(self, control_points_matrix, color='cyan', wireframe=True, name=""):
         """
         control_points_matrix: matriz 4x4 de pontos de controle (Point3D)
         color: cor da superfície
         wireframe: se True, desenha a malha; se False, preenche os polígonos
         """
+        super().__init__(name)
         self.control_points = control_points_matrix  # Matriz 4x4 de pontos de controle
         self.color = color
         self.wireframe = wireframe
@@ -692,7 +723,7 @@ class Window:
         self.height = height
         self.title = title
 
-                # Configurações da janela
+        # Configurações da janela
         self.root = tk.Tk()
         self.root.title(self.title)
 
@@ -714,9 +745,22 @@ class Window:
         # Vincula o evento de redimensionamento do canvas
         self.canvas.bind('<Configure>', self.on_canvas_resize)
 
-        # Painel lateral para os botões
-        button_frame = tk.Frame(main_frame)
-        button_frame.grid(row=0, column=1, sticky='ns')
+        # Painel lateral para os botões e a lista de objetos
+        side_frame = tk.Frame(main_frame)
+        side_frame.grid(row=0, column=1, sticky='ns')
+
+        # Configurações de redimensionamento do side_frame
+        side_frame.rowconfigure(0, weight=1)
+        side_frame.columnconfigure(0, weight=1)
+        side_frame.columnconfigure(1, weight=1)
+
+        # Painel para os botões de navegação
+        button_frame = tk.Frame(side_frame)
+        button_frame.grid(row=0, column=0, sticky='nsew')
+
+        # Painel para a lista de objetos e transformações
+        object_frame = tk.Frame(side_frame)
+        object_frame.grid(row=0, column=1, sticky='nsew')
 
         # Definindo a margem
         self.margin = 50  # Pixels
@@ -746,41 +790,33 @@ class Window:
         # Lista de objetos 3D
         self.objects = []
 
+        # Objeto selecionado
+        self.selected_object = None
+
+        # Lista de transformações pendentes
+        self.transformations = []
+
         # Inicializa os objetos 3D
         self.create_objects()
 
-        # Liga os eventos de teclado e mouse
-        self.canvas.bind('<Left>', self.rotate_left)
-        self.canvas.bind('<Right>', self.rotate_right)
-        self.canvas.bind('<Up>', self.rotate_up)
-        self.canvas.bind('<Down>', self.rotate_down)
-        self.canvas.bind('<w>', self.move_forward)
-        self.canvas.bind('<s>', self.move_backward)
-        self.canvas.bind('<a>', self.move_left)
-        self.canvas.bind('<d>', self.move_right)
-        self.canvas.focus_set()
-
+        self.bind_events()
         self.create_navigation_buttons(button_frame)
+        self.create_object_list_and_transform_controls(object_frame)
 
         # Inicia o loop de atualização
         self.update()
 
-    def on_canvas_resize(self, event):
-        """Atualiza os parâmetros quando o canvas é redimensionado."""
-        self.width = event.width
-        self.height = event.height
-
-        # Atualiza o centro do canvas
-        self.center_x = self.width // 2
-        self.center_y = self.height // 2
-
-        # Atualiza a região de clipping
-        self.clip_region = (
-            self.margin,
-            self.margin,
-            self.width - self.margin,
-            self.height - self.margin
-        )
+    def bind_events(self):
+        # Liga os eventos de teclado
+        self.root.bind('<Left>', self.rotate_left)
+        self.root.bind('<Right>', self.rotate_right)
+        self.root.bind('<Up>', self.rotate_up)
+        self.root.bind('<Down>', self.rotate_down)
+        self.root.bind('<w>', self.move_forward)
+        self.root.bind('<s>', self.move_backward)
+        self.root.bind('<a>', self.move_left)
+        self.root.bind('<d>', self.move_right)
+        self.canvas.focus_set()
 
     def create_navigation_buttons(self, parent):
         # Cria botões para rotacionar a câmera
@@ -823,6 +859,89 @@ class Window:
         for i in range(3):
             parent.columnconfigure(i, weight=1)
 
+    def create_object_list_and_transform_controls(self, parent):
+        """Cria a lista de objetos e os controles de transformação no painel lateral."""
+        # Dividimos o parent em linhas usando grid
+
+        # Frame para a lista de objetos
+        list_frame = tk.Frame(parent)
+        list_frame.grid(row=0, column=0, sticky='nsew')
+
+        # Frame para os controles de transformação
+        trans_frame = tk.LabelFrame(parent, text="Transformações")
+        trans_frame.grid(row=1, column=0, sticky='nsew', pady=10)
+
+        # Frame para a lista de transformações pendentes
+        pending_frame = tk.LabelFrame(parent, text="Transformações Pendentes")
+        pending_frame.grid(row=2, column=0, sticky='nsew', pady=10)
+
+        # Configurações de redimensionamento
+        parent.rowconfigure(0, weight=1)
+        parent.rowconfigure(1, weight=0)
+        parent.rowconfigure(2, weight=1)
+        parent.columnconfigure(0, weight=1)
+
+        # Lista de objetos
+        label = tk.Label(list_frame, text="Objetos na Cena")
+        label.pack(pady=5)
+
+        self.object_listbox = tk.Listbox(list_frame)
+        self.object_listbox.pack(fill=tk.BOTH, expand=True)
+        self.object_listbox.bind('<<ListboxSelect>>', self.on_object_select)
+
+        # Preenche a lista com os nomes dos objetos
+        for obj in self.objects:
+            self.object_listbox.insert(tk.END, obj.name)
+
+        # Controles de transformação
+        # Controles de Translação
+        tk.Label(trans_frame, text="Translação (dx, dy, dz):").grid(row=0, column=0, columnspan=3)
+        self.entry_dx = tk.Entry(trans_frame, width=5)
+        self.entry_dx.grid(row=1, column=0)
+        self.entry_dy = tk.Entry(trans_frame, width=5)
+        self.entry_dy.grid(row=1, column=1)
+        self.entry_dz = tk.Entry(trans_frame, width=5)
+        self.entry_dz.grid(row=1, column=2)
+        btn_add_translate = tk.Button(trans_frame, text="Adicionar Translação", command=self.add_translation)
+        btn_add_translate.grid(row=2, column=0, columnspan=3, pady=5)
+
+        # Controles de Rotação
+        tk.Label(trans_frame, text="Rotação (ângulo, eixo):").grid(row=3, column=0, columnspan=3)
+        self.entry_angle = tk.Entry(trans_frame, width=5)
+        self.entry_angle.grid(row=4, column=0)
+        self.axis_var = tk.StringVar(value='x')
+        tk.Radiobutton(trans_frame, text='X', variable=self.axis_var, value='x').grid(row=4, column=1)
+        tk.Radiobutton(trans_frame, text='Y', variable=self.axis_var, value='y').grid(row=4, column=2)
+        tk.Radiobutton(trans_frame, text='Z', variable=self.axis_var, value='z').grid(row=5, column=1)
+        btn_add_rotate = tk.Button(trans_frame, text="Adicionar Rotação", command=self.add_rotation)
+        btn_add_rotate.grid(row=6, column=0, columnspan=3, pady=5)
+
+        # Controles de Escala
+        tk.Label(trans_frame, text="Escala (sx, sy, sz):").grid(row=7, column=0, columnspan=3)
+        self.entry_sx = tk.Entry(trans_frame, width=5)
+        self.entry_sx.grid(row=8, column=0)
+        self.entry_sy = tk.Entry(trans_frame, width=5)
+        self.entry_sy.grid(row=8, column=1)
+        self.entry_sz = tk.Entry(trans_frame, width=5)
+        self.entry_sz.grid(row=8, column=2)
+        btn_add_scale = tk.Button(trans_frame, text="Adicionar Escala", command=self.add_scaling)
+        btn_add_scale.grid(row=9, column=0, columnspan=3, pady=5)
+
+        # Configurações do grid
+        for i in range(3):
+            trans_frame.columnconfigure(i, weight=1)
+
+        # Lista de transformações pendentes
+        self.transformation_listbox = tk.Listbox(pending_frame)
+        self.transformation_listbox.pack(fill=tk.BOTH, expand=True)
+
+        # Botões para aplicar ou limpar transformações
+        btn_apply_transformations = tk.Button(pending_frame, text="Aplicar Transformações", command=self.apply_transformations)
+        btn_apply_transformations.pack(pady=5)
+
+        btn_clear_transformations = tk.Button(pending_frame, text="Limpar Transformações", command=self.clear_transformations)
+        btn_clear_transformations.pack(pady=5)
+
     def create_objects(self):
         # Superfície de Bézier
         control_points_matrix = [
@@ -831,26 +950,26 @@ class Window:
             [Point3D(-1.5, 0.5, 4), Point3D(-0.5, 0.5, 0), Point3D(0.5, 0.5, 3), Point3D(1.5, 0.5, 4)],
             [Point3D(-1.5, 1.5, -2), Point3D(-0.5, 1.5, -2), Point3D(0.5, 1.5, 0), Point3D(1.5, 1.5, -1)],
         ]
-        bezier_surface = BezierSurface3D(control_points_matrix, color='cyan', wireframe=True)
+        bezier_surface = BezierSurface3D(control_points_matrix, color='cyan', wireframe=True, name="Superficie de Bezier")
         rotate_object(bezier_surface, 30, 'x')
         self.objects.append(bezier_surface)
 
         # Outros objetos podem ser adicionados aqui
 
         # Cubo no Octante 1 (x > 0, y > 0, z > 0)
-        cube = Cube3D(Point3D(2, 2, 2), 2, color='blue')
+        cube = Cube3D(Point3D(2, 2, 2), 2, color='blue', name="Cubo")
         rotate_object(cube, 45, 'x')
         rotate_object(cube, 30, 'y')
         translate_object(cube, 0, 0, -1)
         self.objects.append(cube)
 
         # Ponto no Octante 2 (x < 0, y > 0, z > 0)
-        point = Point3D(-2, 2, 2, color='green')
+        point = Point3D(-2, 2, 2, color='green', name="Ponto")
         translate_object(point, 1, 0, 0)
         self.objects.append(point)
 
         # Reta no Octante 3 (x < 0, y < 0, z > 0)
-        line = Line3D(Point3D(-2, -2, 2), Point3D(-1, -1, 2), color='red')
+        line = Line3D(Point3D(-2, -2, 2), Point3D(-1, -1, 2), color='red', name="Linha")
         rotate_object(line, 45, 'z')
         self.objects.append(line)
 
@@ -861,7 +980,7 @@ class Window:
             Point3D(3, -1, 2),
             Point3D(2, -0.5, 2)
         ]
-        polygon = Polygon3D(vertices, color='purple')  # fill_color não especificado
+        polygon = Polygon3D(vertices, color='purple', name="Poligono")  # fill_color não especificado
         scale_object(polygon, 1, 2, 1)
         self.objects.append(polygon)
 
@@ -875,7 +994,7 @@ class Window:
             Point3D(6, 3, -1),
             Point3D(7, 0, -1)
         ]
-        bezier_curve = BezierCurve3D(bezier_control_points, color='orange')
+        bezier_curve = BezierCurve3D(bezier_control_points, color='orange', name="Curva de Bezier")
         translate_object(bezier_curve, -2, 0, 0)
         self.objects.append(bezier_curve)
 
@@ -891,7 +1010,7 @@ class Window:
             Point3D(-8, 2, -8),
             Point3D(-9, 1, -9)
         ]
-        bspline_curve = BSplineCurve3D(bspline_control_points, degree=3, color='brown')
+        bspline_curve = BSplineCurve3D(bspline_control_points, degree=3, color='brown', name="BSpline")
         scale_object(bspline_curve, 0.5, 0.5, 0.5)
         self.objects.append(bspline_curve)
 
@@ -902,10 +1021,106 @@ class Window:
             radius=1,
             segments=20,
             color='magenta',
-            fill_color='pink'
+            fill_color='pink',
+            name="Cone"
         )
         rotate_object(cone, 30, 'y')
         self.objects.append(cone)
+
+    def on_object_select(self, event):
+        """Chamado quando um objeto é selecionado na lista."""
+        selection = event.widget.curselection()
+        if selection:
+            index = selection[0]
+            self.selected_object = self.objects[index]
+        else:
+            self.selected_object = None
+
+    def add_translation(self):
+        """Adiciona uma translação à lista de transformações."""
+        try:
+            dx = float(self.entry_dx.get())
+            dy = float(self.entry_dy.get())
+            dz = float(self.entry_dz.get())
+            transformation = Transformation('translate', (dx, dy, dz))
+            self.transformations.append(transformation)
+            self.transformation_listbox.insert(tk.END, str(transformation))
+        except ValueError:
+            pass  # Pode adicionar mensagens de erro aqui
+        finally:
+            # Limpa as entradas
+            self.entry_dx.delete(0, tk.END)
+            self.entry_dy.delete(0, tk.END)
+            self.entry_dz.delete(0, tk.END)
+
+    def add_rotation(self):
+        """Adiciona uma rotação à lista de transformações."""
+        try:
+            angle = float(self.entry_angle.get())
+            axis = self.axis_var.get()
+            transformation = Transformation('rotate', (angle, axis))
+            self.transformations.append(transformation)
+            self.transformation_listbox.insert(tk.END, str(transformation))
+        except ValueError:
+            pass  # Pode adicionar mensagens de erro aqui
+        finally:
+            # Limpa a entrada
+            self.entry_angle.delete(0, tk.END)
+
+    def add_scaling(self):
+        """Adiciona uma escala à lista de transformações."""
+        try:
+            sx = float(self.entry_sx.get())
+            sy = float(self.entry_sy.get())
+            sz = float(self.entry_sz.get())
+            transformation = Transformation('scale', (sx, sy, sz))
+            self.transformations.append(transformation)
+            self.transformation_listbox.insert(tk.END, str(transformation))
+        except ValueError:
+            pass  # Pode adicionar mensagens de erro aqui
+        finally:
+            # Limpa as entradas
+            self.entry_sx.delete(0, tk.END)
+            self.entry_sy.delete(0, tk.END)
+            self.entry_sz.delete(0, tk.END)
+
+    def apply_transformations(self):
+        """Aplica todas as transformações pendentes ao objeto selecionado."""
+        if self.selected_object:
+            for transformation in self.transformations:
+                if transformation.type == 'translate':
+                    dx, dy, dz = transformation.params
+                    translate_object(self.selected_object, dx, dy, dz)
+                elif transformation.type == 'rotate':
+                    angle, axis = transformation.params
+                    rotate_object(self.selected_object, angle, axis)
+                elif transformation.type == 'scale':
+                    sx, sy, sz = transformation.params
+                    scale_object(self.selected_object, sx, sy, sz)
+            # Limpa a lista de transformações após aplicar
+            self.clear_transformations()
+
+    def clear_transformations(self):
+        """Limpa a lista de transformações pendentes."""
+        self.transformations.clear()
+        self.transformation_listbox.delete(0, tk.END)
+
+    def on_canvas_resize(self, event):
+        """Atualiza os parâmetros quando o canvas é redimensionado."""
+        self.width = event.width
+        self.height = event.height
+
+        # Atualiza o centro do canvas
+        self.center_x = self.width // 2
+        self.center_y = self.height // 2
+
+        # Atualiza a região de clipping
+        self.clip_region = (
+            self.margin,
+            self.margin,
+            self.width - self.margin,
+            self.height - self.margin
+        )
 
     def rotate_left(self, event=None):
         self.yaw -= 5  # Graus
