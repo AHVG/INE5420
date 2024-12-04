@@ -1,6 +1,8 @@
 import tkinter as tk
-from tkinter import filedialog, messagebox
+import numpy as np
 import math
+
+from tkinter import filedialog, messagebox
 
 
 # Classe para representar uma transformação
@@ -480,6 +482,179 @@ class BezierSurface3D(Object3D):
                                 canvas.create_line(x0_clipped, y0_clipped, x1_clipped, y1_clipped, fill=self.color)
                     else:
                         # Desenha o quadrilátero preenchido
+                        polygon = [p0, p1, p2, p3]
+                        clipped_polygon = sutherland_hodgman_clip(polygon, clip_region)
+                        if clipped_polygon:
+                            flat_points = [coord for point in clipped_polygon for coord in point]
+                            canvas.create_polygon(flat_points, fill=self.color, outline='black')
+
+class BSplineSurface3D(Object3D):
+    """Class to represent a bicubic B-spline surface in 3D using forward differences."""
+    def __init__(self, control_points_matrix, color='yellow', wireframe=True, name=""):
+        super().__init__(name)
+        self.control_points = control_points_matrix  # Matrix of control points (list of lists of Point3D)
+        self.color = color
+        self.wireframe = wireframe
+        self.surface_points = []  # Evaluated surface points
+        self.steps = 10  # Number of divisions in u and v directions
+
+    def transform(self, view_matrix):
+        for row in self.control_points:
+            for point in row:
+                point.transform(view_matrix)
+
+    def is_visible(self):
+        """Check if any part of the surface is visible."""
+        return any(point.tz < 0 for row in self.control_points for point in row)
+
+    def project(self, project_func):
+        """Evaluate the surface using forward differences and project the points."""
+        self.surface_points = []
+        self.project_func = project_func  # Store the projection function for use in other methods
+
+        # Use forward differences to compute surface points
+        n = len(self.control_points)
+        m = len(self.control_points[0])
+        if n < 4 or m < 4:
+            # Need at least 4x4 control points
+            return
+
+        # Basis matrix for B-spline
+        M_bspline = (1/6) * np.array([
+            [-1,  3, -3,  1],
+            [ 3, -6,  3,  0],
+            [-3,  0,  3,  0],
+            [ 1,  4,  1,  0]
+        ])
+
+        # Iterate over patches
+        for i in range(n - 3):
+            for j in range(m - 3):
+                # Extract 4x4 control points for the current patch
+                Gx = np.array([[self.control_points[i + a][j + b].tx for b in range(4)] for a in range(4)])
+                Gy = np.array([[self.control_points[i + a][j + b].ty for b in range(4)] for a in range(4)])
+                Gz = np.array([[self.control_points[i + a][j + b].tz for b in range(4)] for a in range(4)])
+
+                # Compute the coefficients matrices
+                Coeff_x = M_bspline @ Gx @ M_bspline.T
+                Coeff_y = M_bspline @ Gy @ M_bspline.T
+                Coeff_z = M_bspline @ Gz @ M_bspline.T
+
+                # Evaluate the patch using forward differences
+                patch_points = self.evaluate_patch_forward_differences(Coeff_x, Coeff_y, Coeff_z)
+                self.surface_points.extend(patch_points)
+
+    def evaluate_patch_forward_differences(self, Coeff_x, Coeff_y, Coeff_z):
+        """Evaluate a single patch using forward differences."""
+        steps = self.steps
+        du = 1 / steps
+        dv = 1 / steps
+
+        # Initialize arrays to hold points
+        patch_points = []
+
+        # Compute initial values and deltas for u and v
+        u = 0
+        for s in range(steps + 1):
+            v = 0
+            # Initialize De Boor's algorithm for the u-direction
+            U = np.array([u**3, u**2, u, 1])
+            delta_U = np.array([3*u**2, 2*u, 1, 0]) * du
+            delta2_U = np.array([6*u, 2, 0, 0]) * du**2
+            delta3_U = np.array([6, 0, 0, 0]) * du**3
+
+            # Evaluate the initial point in v-direction
+            V = np.array([v**3, v**2, v, 1])
+            delta_V = np.array([3*v**2, 2*v, 1, 0]) * dv
+            delta2_V = np.array([6*v, 2, 0, 0]) * dv**2
+            delta3_V = np.array([6, 0, 0, 0]) * dv**3
+
+            # Compute initial point
+            x = U @ Coeff_x @ V
+            y = U @ Coeff_y @ V
+            z = U @ Coeff_z @ V
+
+            # Store the point if visible
+            if z < 0:
+                screen_x, screen_y = self.project_func(x, y, z)
+                patch_points.append((screen_x, screen_y))
+            else:
+                patch_points.append(None)
+
+            # Precompute deltas for v-direction
+            delta_x_v = U @ Coeff_x @ delta_V
+            delta_y_v = U @ Coeff_y @ delta_V
+            delta_z_v = U @ Coeff_z @ delta_V
+
+            delta2_x_v = U @ Coeff_x @ delta2_V
+            delta2_y_v = U @ Coeff_y @ delta2_V
+            delta2_z_v = U @ Coeff_z @ delta2_V
+
+            delta3_x_v = U @ Coeff_x @ delta3_V
+            delta3_y_v = U @ Coeff_y @ delta3_V
+            delta3_z_v = U @ Coeff_z @ delta3_V
+
+            # Iterate over v
+            for t in range(steps):
+                # Update x, y, z in v-direction using forward differences
+                delta_x_v += delta2_x_v
+                delta_y_v += delta2_y_v
+                delta_z_v += delta2_z_v
+
+                delta2_x_v += delta3_x_v
+                delta2_y_v += delta3_y_v
+                delta2_z_v += delta3_z_v
+
+                x += delta_x_v
+                y += delta_y_v
+                z += delta_z_v
+
+                if z < 0:
+                    screen_x, screen_y = self.project_func(x, y, z)
+                    patch_points.append((screen_x, screen_y))
+                else:
+                    patch_points.append(None)
+                v += dv
+            u += du
+        return patch_points
+
+    def draw(self, canvas, clip_region):
+        """Draw the surface."""
+        steps_u = self.steps
+        steps_v = self.steps
+
+        num_patches_u = len(self.control_points) - 3
+        num_patches_v = len(self.control_points[0]) - 3
+
+        total_steps_u = steps_u * num_patches_u
+        total_steps_v = steps_v * num_patches_v
+
+        for i in range(total_steps_u):
+            for j in range(total_steps_v):
+                idx = i * (total_steps_v + 1) + j
+                p0 = self.surface_points[idx]
+                p1 = self.surface_points[idx + 1]
+                p2 = self.surface_points[idx + total_steps_v + 2]
+                p3 = self.surface_points[idx + total_steps_v + 1]
+
+                if None not in (p0, p1, p2, p3):
+                    if self.wireframe:
+                        # Draw lines
+                        lines = [
+                            (p0, p1),
+                            (p1, p2),
+                            (p2, p3),
+                            (p3, p0)
+                        ]
+                        for line in lines:
+                            x0, y0 = line[0]
+                            x1, y1 = line[1]
+                            clipped_line = cohen_sutherland_clip(x0, y0, x1, y1, clip_region)
+                            if clipped_line:
+                                x0_clipped, y0_clipped, x1_clipped, y1_clipped = clipped_line
+                                canvas.create_line(x0_clipped, y0_clipped, x1_clipped, y1_clipped, fill=self.color)
+                    else:
+                        # Draw filled polygon
                         polygon = [p0, p1, p2, p3]
                         clipped_polygon = sutherland_hodgman_clip(polygon, clip_region)
                         if clipped_polygon:
@@ -1054,6 +1229,17 @@ class Window:
 
         btn_add_surface = tk.Button(parent, text="Adicionar Superfície Bicúbica", command=self.add_bicubic_surface)
         btn_add_surface.pack(pady=5)
+        
+        # --------------------- Input for Bicubic B-spline Surface ---------------------
+        tk.Label(parent, text="Superfície B-spline Bicúbica:", bg='lightgray', font=('Arial', 12, 'bold')).pack(pady=(20, 5))
+        tk.Label(parent, text="Formato:", bg='lightgray').pack()
+        tk.Label(parent, text="(x11,y11,z11),(x12,y12,z12),...;(x21,y21,z21),(x22,y22,z22),...;...", bg='lightgray', wraplength=180, justify='left').pack(padx=10)
+
+        self.bspline_surface_entry = tk.Entry(parent, width=30)
+        self.bspline_surface_entry.pack(pady=5)
+
+        btn_add_bspline_surface = tk.Button(parent, text="Adicionar Superfície B-spline", command=self.add_bspline_surface)
+        btn_add_bspline_surface.pack(pady=5)
 
     def create_objects(self):
         # Superfície de Bézier
@@ -1067,7 +1253,17 @@ class Window:
         rotate_object(bezier_surface, 30, 'x')
         self.objects.append(bezier_surface)
 
-        # Outros objetos podem ser adicionados aqui
+        # B-spline Bicubic Surface
+        control_points_matrix_bspline = [
+            [Point3D(-1.5, -1.5, 4), Point3D(-0.5, -1.5, 2), Point3D(0.5, -1.5, -1), Point3D(1.5, -1.5, 2)],
+            [Point3D(-1.5, -0.5, 1), Point3D(-0.5, -0.5, 3), Point3D(0.5, -0.5, 0), Point3D(1.5, -0.5, -1)],
+            [Point3D(-1.5, 0.5, 4), Point3D(-0.5, 0.5, 0), Point3D(0.5, 0.5, 3), Point3D(1.5, 0.5, 4)],
+            [Point3D(-1.5, 1.5, -2), Point3D(-0.5, 1.5, -2), Point3D(0.5, 1.5, 0), Point3D(1.5, 1.5, -1)],
+        ]
+        bspline_surface = BSplineSurface3D(control_points_matrix_bspline, color='yellow', wireframe=True, name="Superfície B-spline")
+        rotate_object(bspline_surface, 30, 'x')
+        self.objects.append(bspline_surface)
+
 
         # Cubo no Octante 1 (x > 0, y > 0, z > 0)
         cube = Cube3D(Point3D(2, 2, 2), 2, color='blue', name="Cubo")
@@ -1257,6 +1453,49 @@ class Window:
 
         except Exception as e:
             tk.messagebox.showerror("Erro ao Adicionar Superfície", f"Erro: {e}")
+
+    def add_bspline_surface(self):
+        """Adds a bicubic B-spline surface with specified control points."""
+        input_str = self.bspline_surface_entry.get()
+        try:
+            rows = input_str.strip().split(';')
+            if len(rows) < 4:
+                raise ValueError("A B-spline surface requires at least 4 rows of control points.")
+
+            control_points_matrix = []
+            for row_index, row in enumerate(rows):
+                # Remove spaces and split the points
+                points_str = row.strip().split('),(')
+                # Remove possible '(' from the first point and ')' from the last point
+                points_str[0] = points_str[0].lstrip('(')
+                points_str[-1] = points_str[-1].rstrip(')')
+                if len(points_str) < 4:
+                    raise ValueError(f"Each row must contain at least 4 control points. Error in row {row_index + 1}.")
+
+                row_points = []
+                for point_str in points_str:
+                    coords = point_str.split(',')
+                    if len(coords) != 3:
+                        raise ValueError(f"Invalid format for point: {point_str}")
+                    x, y, z = map(float, coords)
+                    row_points.append(Point3D(x, y, z))
+                control_points_matrix.append(row_points)
+
+            # Check if the matrix is rectangular
+            num_columns = len(control_points_matrix[0])
+            for row in control_points_matrix:
+                if len(row) != num_columns:
+                    raise ValueError("All rows must have the same number of control points.")
+
+            # Create the B-spline surface
+            bspline_surface = BSplineSurface3D(control_points_matrix, color='yellow', wireframe=True, name="Superfície B-spline")
+            rotate_object(bspline_surface, 30, 'x')
+            self.objects.append(bspline_surface)
+            self.object_listbox.insert(tk.END, bspline_surface.name)
+            self.bspline_surface_entry.delete(0, tk.END)
+
+        except Exception as e:
+            tk.messagebox.showerror("Erro ao Adicionar Superfície B-spline", f"Erro: {e}")
 
     def add_point(self):
         """Adiciona um ponto com as coordenadas especificadas."""
