@@ -770,6 +770,7 @@ class Window:
 
         # Parâmetros de projeção
         self.scale = 500  # Controle de zoom
+        self.projection_type = 'perspective'  # Tipo de projeção inicial
 
         # Posição e orientação do observador
         self.eye = [0, 0, -10]  # Posição da câmera
@@ -843,6 +844,7 @@ class Window:
         self.root.bind('<plus>', self.zoom_in)   # Tecla '+'
         self.root.bind('<minus>', self.zoom_out)  # Tecla '-'
         self.root.bind('<MouseWheel>', self.on_mouse_wheel)  # Scroll do mouse
+        self.root.bind('<p>', lambda event: self.toggle_projection())
         self.canvas.focus_set()
 
     def on_canvas_resize(self, event):
@@ -912,6 +914,14 @@ class Window:
 
         btn_zoom_out = tk.Button(parent, text="Diminuir Zoom (-)", command=lambda: self.zoom_out())
         btn_zoom_out.grid(row=13, column=0, columnspan=3, sticky='ew')
+
+        # Espaço entre grupos de botões
+        spacer = tk.Label(parent, text="")
+        spacer.grid(row=14, column=0, pady=10)
+
+        # Botão para alternar projeção
+        self.projection_button = tk.Button(parent, text='Usar Projeção Paralela', command=self.toggle_projection)
+        self.projection_button.grid(row=15, column=0, columnspan=3, sticky='ew')
 
         # Configurações para expandir os botões
         for i in range(3):
@@ -1310,6 +1320,14 @@ class Window:
         except ValueError as e:
             tk.messagebox.showerror("Erro ao Adicionar Curva Bézier", f"Erro: {e}")
 
+    def toggle_projection(self):
+        if self.projection_type == 'perspective':
+            self.projection_type = 'parallel'
+            self.projection_button.config(text='Usar Projeção Perspectiva')
+        else:
+            self.projection_type = 'perspective'
+            self.projection_button.config(text='Usar Projeção Paralela')
+
     def on_mouse_wheel(self, event):
         if event.delta > 0:
             self.zoom_in()
@@ -1431,13 +1449,18 @@ class Window:
         return sum([a[i]*b[i] for i in range(3)])
 
     def project_point(self, x, y, z):
-        """Projeta um ponto 3D em 2D usando projeção em perspectiva."""
-        if z != 0:
-            factor = self.scale / z
-        else:
-            factor = self.scale
-        x = x * factor + self.center_x
-        y = -y * factor + self.center_y  # Inverte o eixo Y para corresponder às coordenadas da tela
+        """Projeta um ponto 3D em 2D usando projeção em perspectiva ou paralela."""
+        if self.projection_type == 'perspective':
+            if z != 0:
+                factor = self.scale / z
+            else:
+                factor = self.scale
+            x = x * factor + self.center_x
+            y = -y * factor + self.center_y
+        elif self.projection_type == 'parallel':
+            factor = self.scale * 0.05  # Ajuste este valor conforme necessário
+            x = x * factor + self.center_x
+            y = -y * factor + self.center_y
         return x, y
 
 
