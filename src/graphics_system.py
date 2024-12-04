@@ -840,6 +840,9 @@ class Window:
         self.root.bind('<s>', self.move_backward)
         self.root.bind('<a>', self.move_left)
         self.root.bind('<d>', self.move_right)
+        self.root.bind('<plus>', self.zoom_in)   # Tecla '+'
+        self.root.bind('<minus>', self.zoom_out)  # Tecla '-'
+        self.root.bind('<MouseWheel>', self.on_mouse_wheel)  # Scroll do mouse
         self.canvas.focus_set()
 
     def on_canvas_resize(self, event):
@@ -895,6 +898,20 @@ class Window:
 
         btn_move_right = tk.Button(parent, text="Direita (D)", command=lambda: self.move_right())
         btn_move_right.grid(row=9, column=0, columnspan=3, sticky='ew')
+
+        # Espaço entre grupos de botões
+        spacer = tk.Label(parent, text="")
+        spacer.grid(row=10, column=0, pady=10)
+
+        # Cria botões para zoom
+        zoom_label = tk.Label(parent, text="Zoom")
+        zoom_label.grid(row=11, column=0, columnspan=3, pady=5)
+
+        btn_zoom_in = tk.Button(parent, text="Aumentar Zoom (+)", command=lambda: self.zoom_in())
+        btn_zoom_in.grid(row=12, column=0, columnspan=3, sticky='ew')
+
+        btn_zoom_out = tk.Button(parent, text="Diminuir Zoom (-)", command=lambda: self.zoom_out())
+        btn_zoom_out.grid(row=13, column=0, columnspan=3, sticky='ew')
 
         # Configurações para expandir os botões
         for i in range(3):
@@ -1292,6 +1309,24 @@ class Window:
             self.curve_entry.delete(0, tk.END)
         except ValueError as e:
             tk.messagebox.showerror("Erro ao Adicionar Curva Bézier", f"Erro: {e}")
+
+    def on_mouse_wheel(self, event):
+        if event.delta > 0:
+            self.zoom_in()
+        else:
+            self.zoom_out()
+
+    def zoom_in(self, event=None):
+        """Aumenta o zoom (aproxima a cena)."""
+        self.scale *= 1.1  # Aumenta o scale em 10%
+        if self.scale >= 1000:
+            self.scale = 1000
+
+    def zoom_out(self, event=None):
+        """Diminui o zoom (afasta a cena)."""
+        self.scale /= 1.1  # Diminui o scale em 10%
+        if self.scale <= 250:
+            self.scale = 250
 
     def rotate_left(self, event=None):
         self.yaw -= 5  # Graus
