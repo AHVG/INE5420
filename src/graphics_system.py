@@ -1459,8 +1459,8 @@ class Window:
             y = -y * factor + self.center_y
         elif self.projection_type == 'parallel':
             factor = self.scale * 0.05  # Ajuste este valor conforme necessário
-            x = x * factor + self.center_x
-            y = -y * factor + self.center_y
+            x = -x * factor + self.center_x
+            y = y * factor + self.center_y
         return x, y
 
 
