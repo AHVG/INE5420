@@ -129,6 +129,8 @@ class Window:
         self.root.bind('<s>', self.move_backward)
         self.root.bind('<a>', self.move_left)
         self.root.bind('<d>', self.move_right)
+        self.root.bind('<e>', self.move_up)
+        self.root.bind('<q>', self.move_down)
         self.root.bind('<plus>', self.zoom_in)   # Tecla '+'
         self.root.bind('<minus>', self.zoom_out)  # Tecla '-'
         self.root.bind('<MouseWheel>', self.on_mouse_wheel)  # Scroll do mouse
@@ -189,27 +191,33 @@ class Window:
         btn_move_right = tk.Button(parent, text="Direita (D)", command=lambda: self.move_right())
         btn_move_right.grid(row=9, column=0, columnspan=3, sticky='ew')
 
+        # Botões para mover a câmera para cima e para baixo
+        btn_move_up = tk.Button(parent, text="Subir (E)", command=lambda: self.move_up())
+        btn_move_up.grid(row=10, column=0, columnspan=3, sticky='ew')
+
+        btn_move_down = tk.Button(parent, text="Descer (Q)", command=lambda: self.move_down())
+        btn_move_down.grid(row=11, column=0, columnspan=3, sticky='ew')
         # Espaço entre grupos de botões
         spacer = tk.Label(parent, text="")
         spacer.grid(row=10, column=0, pady=10)
 
         # Cria botões para zoom
         zoom_label = tk.Label(parent, text="Zoom")
-        zoom_label.grid(row=11, column=0, columnspan=3, pady=5)
+        zoom_label.grid(row=12, column=0, columnspan=3, pady=5)
 
         btn_zoom_in = tk.Button(parent, text="Aumentar Zoom (+)", command=lambda: self.zoom_in())
-        btn_zoom_in.grid(row=12, column=0, columnspan=3, sticky='ew')
+        btn_zoom_in.grid(row=13, column=0, columnspan=3, sticky='ew')
 
         btn_zoom_out = tk.Button(parent, text="Diminuir Zoom (-)", command=lambda: self.zoom_out())
-        btn_zoom_out.grid(row=13, column=0, columnspan=3, sticky='ew')
+        btn_zoom_out.grid(row=14, column=0, columnspan=3, sticky='ew')
 
         # Espaço entre grupos de botões
         spacer = tk.Label(parent, text="")
-        spacer.grid(row=14, column=0, pady=10)
+        spacer.grid(row=15, column=0, pady=10)
 
         # Botão para alternar projeção
         self.projection_button = tk.Button(parent, text='Usar Projeção Paralela', command=self.toggle_projection)
-        self.projection_button.grid(row=15, column=0, columnspan=3, sticky='ew')
+        self.projection_button.grid(row=16, column=0, columnspan=3, sticky='ew')
 
         # Configurações para expandir os botões
         for i in range(3):
@@ -244,6 +252,10 @@ class Window:
         self.object_listbox = tk.Listbox(list_frame)
         self.object_listbox.pack(fill=tk.BOTH, expand=True)
         self.object_listbox.bind('<<ListboxSelect>>', self.on_object_select)
+
+        # Botão para remover o objeto selecionado
+        btn_remove_object = tk.Button(list_frame, text="Remover Objeto Selecionado", command=self.remove_selected_object)
+        btn_remove_object.pack(pady=5)
 
         # Preenche a lista com os nomes dos objetos
         for obj in self.objects:
@@ -304,6 +316,11 @@ class Window:
         title = tk.Label(parent, text="Adicionar Objetos", bg='lightgray', font=('Arial', 16, 'bold'))
         title.pack(pady=10)
 
+        # Campo para o nome do objeto
+        tk.Label(parent, text="Nome do Objeto:", bg='lightgray').pack()
+        self.object_name_entry = tk.Entry(parent)
+        self.object_name_entry.pack(pady=5)
+
         # Input e botão para Ponto
         tk.Label(parent, text="Ponto (x,y,z):", bg='lightgray').pack()
         self.point_entry = tk.Entry(parent)
@@ -312,7 +329,7 @@ class Window:
         btn_add_point.pack(pady=5)
 
         # Input e botão para Linha
-        tk.Label(parent, text="Linha (x1,y1,z1)-(x2,y2,z2):", bg='lightgray').pack()
+        tk.Label(parent, text="Linha (x1,y1,z1);(x2,y2,z2):", bg='lightgray').pack()
         self.line_entry = tk.Entry(parent)
         self.line_entry.pack()
         btn_add_line = tk.Button(parent, text="Adicionar Linha", command=self.add_line)
@@ -528,10 +545,25 @@ class Window:
         """Limpa a lista de transformações pendentes."""
         self.transformations.clear()
         self.transformation_listbox.delete(0, tk.END)
+    
+    def remove_selected_object(self):
+        """Remove o objeto atualmente selecionado."""
+        if self.selected_object:
+            # Remove o objeto da lista de objetos
+            self.objects.remove(self.selected_object)
+            # Remove o nome do objeto da Listbox
+            selected_index = self.object_listbox.curselection()
+            if selected_index:
+                self.object_listbox.delete(selected_index)
+            # Limpa a seleção atual
+            self.selected_object = None
+        else:
+            tk.messagebox.showwarning("Nenhum objeto selecionado", "Por favor, selecione um objeto para remover.")
 
     def add_bicubic_surface(self):
         """Adiciona uma superfície bicúbica com os pontos de controle especificados."""
         input_str = self.surface_entry.get()
+        name = self.object_name_entry.get() or "Superfície Bicúbica"
         try:
             rows = input_str.strip().split(';')
             if len(rows) != 4:
@@ -557,12 +589,14 @@ class Window:
                 control_points_matrix.append(row_points)
 
             # Cria a superfície bicúbica
-            bicubic_surface = BezierSurface3D(control_points_matrix, color='orange', wireframe=True, name="Superfície Bicúbica")
+            bicubic_surface = BezierSurface3D(control_points_matrix, color='orange', wireframe=True, name=name)
             rotate_object(bicubic_surface, 30, 'x')  # Aplicar rotações padrão ou personalizadas
             self.objects.append(bicubic_surface)
+            self.object_listbox.insert(tk.END, bicubic_surface.name)  # Atualiza a Listbox
 
             # Limpa a entrada após adicionar
             self.surface_entry.delete(0, tk.END)
+            self.object_name_entry.delete(0, tk.END)
 
         except Exception as e:
             tk.messagebox.showerror("Erro ao Adicionar Superfície", f"Erro: {e}")
@@ -570,6 +604,7 @@ class Window:
     def add_bspline_surface(self):
         """Adds a bicubic B-spline surface with specified control points."""
         input_str = self.bspline_surface_entry.get()
+        name = self.object_name_entry.get() or "Superfície B-spline"
         try:
             rows = input_str.strip().split(';')
             if len(rows) < 4:
@@ -601,11 +636,12 @@ class Window:
                     raise ValueError("All rows must have the same number of control points.")
 
             # Create the B-spline surface
-            bspline_surface = BSplineSurface3D(control_points_matrix, color='yellow', wireframe=True, name="Superfície B-spline")
+            bspline_surface = BSplineSurface3D(control_points_matrix, color='yellow', wireframe=True, name=name)
             rotate_object(bspline_surface, 30, 'x')
             self.objects.append(bspline_surface)
             self.object_listbox.insert(tk.END, bspline_surface.name)
             self.bspline_surface_entry.delete(0, tk.END)
+            self.object_name_entry.delete(0, tk.END)
 
         except Exception as e:
             tk.messagebox.showerror("Erro ao Adicionar Superfície B-spline", f"Erro: {e}")
@@ -613,34 +649,41 @@ class Window:
     def add_point(self):
         """Adiciona um ponto com as coordenadas especificadas."""
         coords = self.point_entry.get()
+        name = self.object_name_entry.get() or "Ponto"
         try:
             x, y, z = map(float, coords.split(','))
-            point = Point3D(x, y, z, color='green', name="Ponto")
+            point = Point3D(x, y, z, color='green', name=name)
             self.objects.append(point)
+            self.object_listbox.insert(tk.END, point.name)  # Atualiza a Listbox
             self.point_entry.delete(0, tk.END)
+            self.object_name_entry.delete(0, tk.END)  # Limpa o nome do objeto
         except ValueError:
             tk.messagebox.showerror("Erro ao Adicionar Ponto", "Entrada inválida para as coordenadas do ponto.\nFormato esperado: x,y,z")
 
     def add_line(self):
         """Adiciona uma linha entre dois pontos especificados."""
         coords = self.line_entry.get()
+        name = self.object_name_entry.get() or "Linha"
         try:
-            points = coords.split('-')
+            points = coords.split(';')
             if len(points) != 2:
-                raise ValueError("Formato inválido para a linha.\nFormato esperado: x1,y1,z1-x2,y2,z2")
+                raise ValueError("Formato inválido para a linha.\nFormato esperado: x1,y1,z1;x2,y2,z2")
             x1, y1, z1 = map(float, points[0].split(','))
             x2, y2, z2 = map(float, points[1].split(','))
             start = Point3D(x1, y1, z1)
             end = Point3D(x2, y2, z2)
-            line = Line3D(start, end, color='red', name="Linha")
+            line = Line3D(start, end, color='red', name=name)
             self.objects.append(line)
+            self.object_listbox.insert(tk.END, line.name)  # Atualiza a Listbox
             self.line_entry.delete(0, tk.END)
+            self.object_name_entry.delete(0, tk.END)  # Limpa o nome do objeto
         except ValueError as e:
             tk.messagebox.showerror("Erro ao Adicionar Linha", f"Erro: {e}")
 
     def add_polygon(self):
         """Adiciona um polígono com os vértices especificados."""
         coords = self.polygon_entry.get()
+        name = self.object_name_entry.get() or "Polígono"
         try:
             points_str = coords.split(';')
             if len(points_str) < 3:
@@ -649,15 +692,19 @@ class Window:
             for point_str in points_str:
                 x, y, z = map(float, point_str.split(','))
                 vertices.append(Point3D(x, y, z))
-            polygon = Polygon3D(vertices, color='purple', name="Polígono")
+            polygon = Polygon3D(vertices, color='purple', name=name)
             self.objects.append(polygon)
+            self.object_listbox.insert(tk.END, polygon.name)  # Atualiza a Listbox
             self.polygon_entry.delete(0, tk.END)
+            self.object_name_entry.delete(0, tk.END)
+
         except ValueError as e:
             tk.messagebox.showerror("Erro ao Adicionar Polígono", f"Erro: {e}")
 
     def add_bezier_curve(self):
         """Adiciona uma curva de Bézier com os pontos de controle especificados."""
         coords = self.curve_entry.get()
+        name = self.object_name_entry.get() or "Curva de Bézier"
         try:
             points_str = coords.split(';')
             if len(points_str) < 2:
@@ -666,9 +713,12 @@ class Window:
             for point_str in points_str:
                 x, y, z = map(float, point_str.split(','))
                 control_points.append(Point3D(x, y, z))
-            bezier_curve = BezierCurve3D(control_points, color='orange', name="Curva de Bézier")
+            bezier_curve = BezierCurve3D(control_points, color='orange', name=name)
             self.objects.append(bezier_curve)
+            self.object_listbox.insert(tk.END, bezier_curve.name)  # Atualiza a Listbox
             self.curve_entry.delete(0, tk.END)
+            self.object_name_entry.delete(0, tk.END)
+
         except ValueError as e:
             tk.messagebox.showerror("Erro ao Adicionar Curva Bézier", f"Erro: {e}")
 
@@ -726,15 +776,23 @@ class Window:
 
     def move_left(self, event=None):
         direction = self.get_right_vector()
-        self.eye[0] -= direction[0] * 0.5
-        self.eye[1] -= direction[1] * 0.5
-        self.eye[2] -= direction[2] * 0.5
-
-    def move_right(self, event=None):
-        direction = self.get_right_vector()
         self.eye[0] += direction[0] * 0.5
         self.eye[1] += direction[1] * 0.5
         self.eye[2] += direction[2] * 0.5
+
+    def move_right(self, event=None):
+        direction = self.get_right_vector()
+        self.eye[0] -= direction[0] * 0.5
+        self.eye[1] -= direction[1] * 0.5
+        self.eye[2] -= direction[2] * 0.5
+    
+    def move_up(self, event=None):
+        """Move a câmera para cima."""
+        self.eye[1] -= 0.5
+
+    def move_down(self, event=None):
+        """Move a câmera para baixo."""
+        self.eye[1] += 0.5
 
     def get_direction_vector(self):
         """Calcula o vetor de direção baseado em yaw e pitch."""
